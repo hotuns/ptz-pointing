@@ -1,0 +1,31 @@
+#root {
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  margin: 0 auto;
+  backgorund: #000;
+}
+
+.flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+
+#plant {
+  tranform-origin: center;
+  transform: rotate(0deg);
+
+}
+#ptz {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  width: 10%;
+  margin: auto;
+  transform-origin: center;
+  transform: rotate(45deg);
+}
