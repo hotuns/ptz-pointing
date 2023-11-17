@@ -14,8 +14,7 @@
 
 
 #plant {
-  tranform-origin: center;
-  transform: rotate(0deg);
+  tranform-origin: center center;
 
 }
 #ptz {
@@ -26,6 +25,5 @@
   right: 0;
   width: 10%;
   margin: auto;
-  transform-origin: center;
-  transform: rotate(45deg);
+  transform-origin: center center;
 }

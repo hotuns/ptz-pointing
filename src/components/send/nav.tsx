@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useCallback } from 'react';
 import { ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon, ChevronUpIcon } from '@chakra-ui/icons';
 import {
     NumberInput,
@@ -13,68 +13,93 @@ import {
     InputLeftAddon,
     Button,
 } from '@chakra-ui/react';
+import { set_ptz_angles } from '@/DeviceCommunicator/commands/set_ptz_angles';
 // import { set_ptz_angles } from '@/DeviceCommunicator/commands/set_ptz_angles'; // 根据您的实际路径导入
+
+const debounce = (func: Function, wait: number) => {
+    let timeout: NodeJS.Timeout;
+    return function executedFunction(...args: any[]) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+};
 
 export function NavComponent(props: {
     onSendCommand: (command: Buffer) => void;
-    ptz: { name: string, pitch: boolean, yaw: boolean }
+    ptz: { name: string, pitch: boolean, yaw: boolean, pitch_limit: number[], yaw_limit: number[] },
+    ptzCurrentAttitude: IPtzAttitude
 }) {
     const { ptz = {
         name: '',
         pitch: true,
+        pitch_limit: [0, 0],
         yaw: true,
-    }, onSendCommand } = props;
-    const [step, setStep] = useState(0.1);
-    const [pitch, setPitch] = useState(0);
-    const [yaw, setYaw] = useState(0);
-    const longPressTimerRef = useRef<NodeJS.Timeout>();
-    const isLongPressRef = useRef(false);
+        yaw_limit: [0, 0],
+    }, onSendCommand, ptzCurrentAttitude } = props;
+    const [step, setStep] = useState(5);
+    const [pitch, setPitch] = useState(ptzCurrentAttitude.pitch);
+    const [yaw, setYaw] = useState(ptzCurrentAttitude.yaw);
 
-    const adjustValue = (direction: string) => {
+    const updateAngle = useCallback(debounce((direction: string) => {
+        console.log(direction);
+        let target = 0;
         switch (direction) {
             case 'up':
-                setPitch(prev => prev + step);
+                if (!ptz.pitch) break;
+                // 判断limit，超过limit 则等于limit
+                target = pitch + step
+                target = Math.max(target, ptz.pitch_limit[0])
+                target = Math.min(target, ptz.pitch_limit[1])
+                setPitch(target)
                 break;
             case 'down':
-                setPitch(prev => prev - step);
+                if (!ptz.pitch) break;
+                target = pitch - step
+                target = Math.max(target, ptz.pitch_limit[0])
+                target = Math.min(target, ptz.pitch_limit[1])
+                setPitch(target)
                 break;
             case 'left':
-                setYaw(prev => prev - step);
+                if (!ptz.yaw) break;
+                target = yaw - step
+                target = Math.max(target, ptz.yaw_limit[0])
+                target = Math.min(target, ptz.yaw_limit[1])
+                setYaw(target)
                 break;
             case 'right':
-                setYaw(prev => prev + step);
+                if (!ptz.yaw) break;
+                target = yaw + step
+                target = Math.max(target, ptz.yaw_limit[0])
+                target = Math.min(target, ptz.yaw_limit[1])
+                setYaw(target)
                 break;
             default:
                 break;
         }
-    };
 
-    const handleButtonDown = (direction: string) => {
-        isLongPressRef.current = false;
-        longPressTimerRef.current = setTimeout(() => {
-            isLongPressRef.current = true;
-            startLongPressAction(direction);
-        }, 500);
-    };
-
-    const handleButtonUp = (direction: string) => {
-        clearTimeout(longPressTimerRef.current);
-        if (!isLongPressRef.current) {
-            adjustValue(direction);
+        // 发送指令
+        if (ptz.pitch && ptz.yaw) {
+            onSendCommand(set_ptz_angles(false, {
+                pitch,
+                roll: ptzCurrentAttitude.roll,
+                yaw
+            }));
+        } else if (!ptz.pitch && ptz.yaw) {
+            onSendCommand(set_ptz_angles(false, {
+                pitch: ptzCurrentAttitude.pitch,
+                roll: ptzCurrentAttitude.roll,
+                yaw
+            }));
         }
-        stopLongPressAction();
-    };
 
-    const startLongPressAction = (direction: string) => {
-        longPressTimerRef.current = setInterval(() => adjustValue(direction), 100);
-    };
-
-    const stopLongPressAction = () => {
-        clearInterval(longPressTimerRef.current);
-    };
+    }, 200), [step, yaw, pitch]);
 
     return (
-        <Card p="4" width={'200px'} className='select-none'>
+        <Card p="4" width={'200px'}>
             <Flex flexDirection={"column"} justifyContent={'space-between'} alignItems={'center'}>
                 <Box border="1px" borderRadius={'50%'} width='160px' height='160px' position={'relative'}>
                     <ChevronUpIcon
@@ -82,9 +107,7 @@ export function NavComponent(props: {
                         position={'absolute'}
                         top={'10px'}
                         left={'60px'}
-                        onMouseDown={() => handleButtonDown('up')}
-                        onMouseUp={() => handleButtonUp('up')}
-                        onMouseLeave={() => handleButtonUp('up')}
+                        onClick={() => updateAngle('up')}
                         _hover={
                             ptz.pitch ? {
                                 background: "white",
@@ -92,7 +115,6 @@ export function NavComponent(props: {
                                 scale: 1.2
                             } : {
                                 cursor: 'not-allowed',
-                                pointerEvents: 'none'
                             }
                         }
                     />
@@ -101,9 +123,7 @@ export function NavComponent(props: {
                         position={'absolute'}
                         bottom={'10px'}
                         left={'60px'}
-                        onMouseDown={() => handleButtonDown('down')}
-                        onMouseUp={() => handleButtonUp('down')}
-                        onMouseLeave={() => handleButtonUp('down')}
+                        onClick={() => updateAngle('down')}
                         _hover={
                             ptz.pitch ? {
                                 background: "white",
@@ -111,7 +131,7 @@ export function NavComponent(props: {
                                 scale: 1.2
                             } : {
                                 cursor: 'not-allowed',
-                                pointerEvents: 'none'
+
                             }
                         }
                     />
@@ -120,9 +140,7 @@ export function NavComponent(props: {
                         position={'absolute'}
                         top={'60px'}
                         left={'10px'}
-                        onMouseDown={() => handleButtonDown('left')}
-                        onMouseUp={() => handleButtonUp('left')}
-                        onMouseLeave={() => handleButtonUp('left')}
+                        onClick={() => updateAngle('left')}
                         _hover={
                             ptz.yaw ? {
                                 background: "white",
@@ -130,7 +148,7 @@ export function NavComponent(props: {
                                 scale: 1.2
                             } : {
                                 cursor: 'not-allowed',
-                                pointerEvents: 'none'
+
                             }
                         }
                     />
@@ -139,9 +157,7 @@ export function NavComponent(props: {
                         position={'absolute'}
                         top={'60px'}
                         right={'10px'}
-                        onMouseDown={() => handleButtonDown('right')}
-                        onMouseUp={() => handleButtonUp('right')}
-                        onMouseLeave={() => handleButtonUp('right')}
+                        onClick={() => updateAngle('right')}
                         _hover={
                             ptz.yaw ? {
                                 background: "white",
@@ -149,7 +165,7 @@ export function NavComponent(props: {
                                 scale: 1.2
                             } : {
                                 cursor: 'not-allowed',
-                                pointerEvents: 'none'
+
                             }
                         }
                     />

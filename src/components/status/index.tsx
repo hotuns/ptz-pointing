@@ -187,43 +187,7 @@ export const AppStatus = (props: {
         <Box>
           <Text>设备状态</Text>
         </Box>
-        <Box className="flex space-x-4">
-          <Stat>
-            <StatLabel>temperature</StatLabel>
-            <StatNumber>{deviceStatus.temperature.toFixed(2)}</StatNumber>
-            <StatHelpText>温度</StatHelpText>
-          </Stat>
 
-          <Stat>
-            <StatLabel>main_voltage</StatLabel>
-            <StatNumber>{deviceStatus.main_voltage.toFixed(2)}</StatNumber>
-            <StatHelpText>主电压</StatHelpText>
-          </Stat>
-
-          <Stat>
-            <StatLabel>sys_voltage</StatLabel>
-            <StatNumber>{deviceStatus.sys_voltage.toFixed(2)}</StatNumber>
-            <StatHelpText>系统电压</StatHelpText>
-          </Stat>
-
-          <Stat>
-            <StatLabel>chip_voltage</StatLabel>
-            <StatNumber>{deviceStatus.chip_voltage.toFixed(2)}</StatNumber>
-            <StatHelpText>芯片电压</StatHelpText>
-          </Stat>
-
-          <Stat>
-            <StatLabel>power_io_status</StatLabel>
-            <StatNumber>{deviceStatus.power_io_status.toFixed(2)}</StatNumber>
-            <StatHelpText>电源IO状态</StatHelpText>
-          </Stat>
-
-          <Stat>
-            <StatLabel>count</StatLabel>
-            <StatNumber>{deviceStatus.count.toFixed(2)}</StatNumber>
-            <StatHelpText>计数器</StatHelpText>
-          </Stat>
-        </Box>
       </Card>
     </Flex>
   );

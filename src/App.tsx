@@ -1,17 +1,39 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import "./App.css";
 import { DeviceCommunicator, TLVType } from "./DeviceCommunicator";
 import { AppStatus } from "./components/status";
 import { AppSend } from "./components/send";
 import { Box, Card, Flex, Select, Image, Button } from "@chakra-ui/react";
-import PlantImg from "@/assets/plant.png";
-import PTZIcon from "@/assets/ptz.svg";
+import { PlantCom } from "./components/plant";
 
 let mock = false;
 let communicator: DeviceCommunicator | null = null;
 
+const ptzlist = [
+  {
+    name: '翔拓二轴云台',
+    pitch: true,
+    pitch_limit: [-30, 30],
+    yaw: true,
+    yaw_limit: [-30, 30],
+  },
+  {
+    name: '钜钺重载云台',
+    pitch: false,
+    yaw: true,
+    yaw_limit: [-180, 180],
+  }
+]
+
 function App() {
+  const [currentPtz, set_currentPtz] = useState<any>(ptzlist[0]);
+  const handlePtzChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const index = e.target.value;
+    set_currentPtz(ptzlist[parseInt(index)]);
+  }
+
   const [serialport_list, set_serialport_list] = useState<any[]>([]);
+  const [currentPort, set_currentPort] = useState<any>();
 
   const [isBtnDisabled, set_isBtnDisabled] = useState<boolean>(true);
 
@@ -28,12 +50,14 @@ function App() {
 
   async function handlePortChange(e: React.ChangeEvent<HTMLSelectElement>) {
     const port = e.target.value;
-    console.log("[App.tsx]", "handlePortChange", port);
+    set_currentPort(port);
+  }
 
-    communicator = new DeviceCommunicator(port, false, onDataReceived);
-    await communicator.open();
-    set_isBtnDisabled(false);
-    console.log("[App.tsx]", "handlePortChange", "open");
+  function handlePortStart() {
+    communicator = new DeviceCommunicator(currentPort, false, onDataReceived);
+    communicator!.open().then(() => {
+      set_isBtnDisabled(false);
+    });
   }
 
 
@@ -43,6 +67,7 @@ function App() {
       communicator.close();
       set_isBtnDisabled(true);
       set_serialport_list([]);
+      set_currentPort(undefined);
     }
   }
 
@@ -129,18 +154,37 @@ function App() {
   }
 
   return (
-    <Card className="p-2 w-full h-full " bg="gray.100">
+    <Card className="p-2 w-full h-full select-none" bg="gray.100">
       <Flex width={'100%'} >
-        <Flex className="space-y-2" width={'50%'} flexDirection={'column'} p="1">
-          <Card padding={'10px'} position={"relative"}>
-            <Image id="plant" src={PlantImg} />
-            <Image id='ptz' src={PTZIcon} />
-          </Card>
+        <Flex className="space-y-2" flexDirection={'column'} p="1">
+
+          <PlantCom
+            controlCurrentAttitude={controlCurrentAttitude}
+            ptzCurrentAttitude={ptzCurrentAttitude}
+            ptzExpectAttitude={ptzExpectAttitude}
+            devicePosition={devicePosition}
+            deviceStatus={deviceStatus}
+          />
 
           <Card>
             <Flex>
               <Select
-                placeholder="选择端口"
+                placeholder="云台"
+                onChange={handlePtzChange}
+                isDisabled={!isBtnDisabled}
+              >
+                {ptzlist.map((ptz, index) => {
+                  return (
+                    <option key={ptz.name} value={index}>
+                      {ptz.name}
+                    </option>
+                  );
+                })}
+              </Select>
+
+
+              <Select
+                placeholder="端口"
                 onClick={reloadPortList}
                 onChange={handlePortChange}
                 isDisabled={!isBtnDisabled}
@@ -153,27 +197,31 @@ function App() {
                   );
                 })}
               </Select>
-              <Button
-                colorScheme="red"
-                isDisabled={isBtnDisabled}
-                onClick={handlePortClose}
-              >断开</Button>
+
+
+              {
+                isBtnDisabled ?
+                  <Button
+                    isDisabled={currentPtz === undefined || currentPort === undefined}
+                    colorScheme="green"
+                    onClick={handlePortStart}
+                  >连接</Button>
+                  :
+                  <Button
+                    colorScheme="red"
+                    onClick={handlePortClose}
+                  >断开</Button>
+              }
+
+
+
             </Flex>
           </Card>
 
-          <AppSend onSendCommand={onSendCommand} />
+
+          <AppSend isDisabled={isBtnDisabled} ptz={currentPtz} onSendCommand={onSendCommand} ptzCurrentAttitude={ptzCurrentAttitude} />
 
         </Flex>
-
-        <Box width={'50%'} className=" flex items-center justify-between" p="1">
-          <AppStatus
-            controlCurrentAttitude={controlCurrentAttitude}
-            ptzCurrentAttitude={ptzCurrentAttitude}
-            ptzExpectAttitude={ptzExpectAttitude}
-            devicePosition={devicePosition}
-            deviceStatus={deviceStatus}
-          />
-        </Box>
       </Flex>
     </Card>
   );
