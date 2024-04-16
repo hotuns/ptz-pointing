@@ -45,8 +45,8 @@ async function createWindow() {
   win = new BrowserWindow({
     title: "云台指向系统",
     icon: join(process.env.VITE_PUBLIC, "favicon.ico"),
-    width: 800,
-    height: 1000,
+    width: 1000,
+    height: 680,
     webPreferences: {
       preload,
       // Warning: Enable nodeIntegration and disable contextIsolation is not secure in production

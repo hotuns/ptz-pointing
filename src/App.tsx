@@ -11,26 +11,26 @@ let communicator: DeviceCommunicator | null = null;
 
 const ptzlist = [
   {
-    name: '翔拓二轴云台',
+    name: "翔拓二轴云台",
     pitch: true,
     pitch_limit: [-30, 30],
     yaw: true,
     yaw_limit: [-30, 30],
   },
   {
-    name: '钜钺重载云台',
+    name: "钜钺重载云台",
     pitch: false,
     yaw: true,
     yaw_limit: [-180, 180],
-  }
-]
+  },
+];
 
 function App() {
-  const [currentPtz, set_currentPtz] = useState<any>(ptzlist[0]);
+  const [currentPtz, set_currentPtz] = useState<any>();
   const handlePtzChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const index = e.target.value;
     set_currentPtz(ptzlist[parseInt(index)]);
-  }
+  };
 
   const [serialport_list, set_serialport_list] = useState<any[]>([]);
   const [currentPort, set_currentPort] = useState<any>();
@@ -59,7 +59,6 @@ function App() {
       set_isBtnDisabled(false);
     });
   }
-
 
   function handlePortClose() {
     console.log("[App.tsx]", "handlePortClose");
@@ -117,6 +116,10 @@ function App() {
     count: 0,
   });
 
+  // 透传接受的数据
+  // 载荷温度
+  const [payloadTemperature, setPayloadTemperature] = useState<number>(0);
+
   function onDataReceived(list: { id: TLVType; string: string; value: any }[]) {
     // console.log("[App.tsx]", "onDataReceived", list);
     list.forEach((data) => {
@@ -135,6 +138,14 @@ function App() {
           break;
         case TLVType.设备状态:
           setDeviceStatus(data.value);
+          break;
+        case TLVType.协议透传接收:
+          let value = data.value;
+          let payload = value.data;
+          // 开始解析payload
+          console.log("payload", payload);
+
+          setPayloadTemperature(0);
           break;
         default:
           break;
@@ -155,17 +166,16 @@ function App() {
 
   return (
     <Card className="p-2 w-full h-full select-none" bg="gray.100">
-      <Flex width={'100%'} >
-        <Flex className="space-y-2" flexDirection={'column'} p="1">
+      <div className="w-full grid grid-cols-2">
+        <PlantCom
+          controlCurrentAttitude={controlCurrentAttitude}
+          ptzCurrentAttitude={ptzCurrentAttitude}
+          ptzExpectAttitude={ptzExpectAttitude}
+          devicePosition={devicePosition}
+          deviceStatus={deviceStatus}
+        />
 
-          <PlantCom
-            controlCurrentAttitude={controlCurrentAttitude}
-            ptzCurrentAttitude={ptzCurrentAttitude}
-            ptzExpectAttitude={ptzExpectAttitude}
-            devicePosition={devicePosition}
-            deviceStatus={deviceStatus}
-          />
-
+        <Card>
           <Card>
             <Flex>
               <Select
@@ -182,7 +192,6 @@ function App() {
                 })}
               </Select>
 
-
               <Select
                 placeholder="端口"
                 onClick={reloadPortList}
@@ -198,31 +207,33 @@ function App() {
                 })}
               </Select>
 
-
-              {
-                isBtnDisabled ?
-                  <Button
-                    isDisabled={currentPtz === undefined || currentPort === undefined}
-                    colorScheme="green"
-                    onClick={handlePortStart}
-                  >连接</Button>
-                  :
-                  <Button
-                    colorScheme="red"
-                    onClick={handlePortClose}
-                  >断开</Button>
-              }
-
-
-
+              {isBtnDisabled ? (
+                <Button
+                  isDisabled={
+                    currentPtz === undefined || currentPort === undefined
+                  }
+                  colorScheme="green"
+                  onClick={handlePortStart}
+                >
+                  连接
+                </Button>
+              ) : (
+                <Button colorScheme="red" onClick={handlePortClose}>
+                  断开
+                </Button>
+              )}
             </Flex>
           </Card>
 
-
-          <AppSend isDisabled={isBtnDisabled} ptz={currentPtz} onSendCommand={onSendCommand} ptzCurrentAttitude={ptzCurrentAttitude} />
-
-        </Flex>
-      </Flex>
+          <AppSend
+            isDisabled={isBtnDisabled}
+            ptz={currentPtz}
+            onSendCommand={onSendCommand}
+            ptzCurrentAttitude={ptzCurrentAttitude}
+            ptzExpectAttitude={ptzExpectAttitude}
+          />
+        </Card>
+      </div>
     </Card>
   );
 }

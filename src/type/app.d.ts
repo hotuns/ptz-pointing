@@ -93,3 +93,13 @@ interface IDeviceStatus {
   /**计数器 U8 每次发送数据+1 */
   count: number;
 }
+
+/**协议透传接收 */
+interface IPassThrough {
+  /**类型 */
+  type: number;
+  /**数据 */
+  data: number;
+  /**计数器 U8 每次发送数据+1 */
+  count: number;
+}

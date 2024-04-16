@@ -11,6 +11,7 @@ export enum TLVType {
   "云台期望姿态角" = 0x21,
   "目标位置的设置值" = 0x31,
   "设备状态" = 0x32,
+  "协议透传接收" = 0x71,
 }
 
 export interface TLVPacket {
@@ -249,6 +250,27 @@ export class DeviceCommunicator {
           string: "设备状态",
           value: devStatus,
         };
+
+      case TLVType.协议透传接收:
+        // 首先获取data总长度
+        // 第1个字节为类型，1:飞控 2:云台 3:杂项
+        // 第2位到倒数第2个位为payload
+        // 最后一个字节为计数器
+        let type = data.readUInt8(0);
+        let payload = data.slice(1, data.length - 1);
+        let count = data.readUInt8(data.length - 1);
+        let passThrough: IPassThrough = {
+          type,
+          data: payload.readUInt8(0),
+          count,
+        };
+
+        return {
+          id: TLVType.协议透传接收,
+          string: "协议透传接收",
+          value: passThrough,
+        };
+
       default:
         console.warn(`Unknown TLV ID: ${packet.id}`);
         return undefined;

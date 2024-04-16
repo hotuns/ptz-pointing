@@ -50,22 +50,3 @@ interface Iposition {
   lat: number;
   lng: number;
 }
-
-/**获取指令 */
-export const getCommand = {
-  /**云台手动控制 */
-  setPtz: (opt: IPtzOption) => {
-    if ((opt.type = "center")) {
-    } else {
-    }
-  },
-
-  /**设置目标位置 */
-  setTargetPosition: (opt: Iposition) => {},
-
-  /**设备控制模式 */
-  setDeviceMode: (opt: {
-    mode: "自动锁定" | "自动保持回中" | "手动控制";
-    count: number;
-  }) => {},
-};

@@ -4,6 +4,7 @@ export enum CommandTLVType {
   "设备控制模式指令" = 0x52,
   "设置设备电源及IO 输出" = 0x53,
   "重启设备" = 0x54,
+  "协议透传" = 0x70,
 }
 
 export function formatCommand(buffer: Buffer, id: CommandTLVType): Buffer {

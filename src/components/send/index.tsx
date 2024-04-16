@@ -22,18 +22,32 @@ import {
 import { set_ptz_angles } from "@/DeviceCommunicator/commands/set_ptz_angles";
 import { set_ptz_localtion } from "@/DeviceCommunicator/commands/set_ptz_localtion";
 import { reboot } from "@/DeviceCommunicator/commands/reboot";
+
 import { NavComponent } from "./nav";
+import {
+  start_control,
+  stop_control,
+  set_temperature,
+} from "@/DeviceCommunicator/commands/pass_through";
 
 export function AppSend({
   isDisabled,
   onSendCommand,
   ptz,
+  ptzExpectAttitude,
   ptzCurrentAttitude,
 }: {
   isDisabled: boolean;
   onSendCommand: (command: Buffer) => void;
-  ptz: { name: string, pitch: boolean, yaw: boolean, pitch_limit: number[], yaw_limit: number[] },
-  ptzCurrentAttitude: IPtzAttitude
+  ptz: {
+    name: string;
+    pitch: boolean;
+    yaw: boolean;
+    pitch_limit: number[];
+    yaw_limit: number[];
+  };
+  ptzExpectAttitude: IPtzExpectlAttitude;
+  ptzCurrentAttitude: IPtzAttitude;
 }) {
   const [ptzAnglesOpt, setPtzAnglesOpt] = useState({
     pitch: 0,
@@ -46,8 +60,11 @@ export function AppSend({
       [key]: value,
     });
   };
-  const { isOpen: isAnglesOpen, onOpen: openAngles, onClose: closeAngles } = useDisclosure()
-
+  const {
+    isOpen: isAnglesOpen,
+    onOpen: openAngles,
+    onClose: closeAngles,
+  } = useDisclosure();
 
   const [ptzLocationOpt, setPtzLocationOpt] = useState({
     latitude: 0,
@@ -60,161 +77,163 @@ export function AppSend({
       [key]: value,
     });
   };
-  const { isOpen: isLocationOpen, onOpen: openLocation, onClose: closeLocation } = useDisclosure()
+  const {
+    isOpen: isLocationOpen,
+    onOpen: openLocation,
+    onClose: closeLocation,
+  } = useDisclosure();
+
+  const [targetTemperature, setTargetTemperature] = useState(20);
 
   return (
     <>
-      <Flex className="mt-1 space-x-2 w-full relative" style={{
-        pointerEvents: isDisabled ? 'none' : 'auto'
-      }}>
-        <NavComponent ptzCurrentAttitude={ptzCurrentAttitude} ptz={ptz} onSendCommand={onSendCommand} />
-        <Box p="4" className="flex-1 space-y-2">
-          <Box className="space-y-1 flex flex-col">
+      <Flex
+        className="mt-1 space-x-2 w-full relative"
+        style={{
+          pointerEvents: isDisabled ? "none" : "auto",
+        }}
+      >
+        <Box className="space-y-1 flex flex-col">
+          <NavComponent
+            ptzExpectAttitude={ptzExpectAttitude}
+            ptzCurrentAttitude={ptzCurrentAttitude}
+            ptz={ptz}
+            onSendCommand={onSendCommand}
+          />
+          <Card className="space-y-2 p-2">
+            <Button size={"sm"} onClick={openAngles}>
+              设置云台角度
+            </Button>
 
-            <Card p='2'>
-              <Flex className="space-x-1">
-                <FormControl display="flex" alignItems="center">
-                  <FormLabel htmlFor="pitch">俯仰</FormLabel>
+            <Button size={"sm"} onClick={openLocation}>
+              设置目标位置
+            </Button>
 
-                  <NumberInput
-                    size="sm"
-                    id="pitch"
-                    value={ptzAnglesOpt.pitch}
-                    onChange={(value) => {
-                      handleAnglesOptChange("pitch", value);
-                    }}
-                  >
-                    <NumberInputField />
-                  </NumberInput>
-                </FormControl>
-
-                <FormControl display="flex" alignItems="center">
-                  <FormLabel htmlFor="roll" mb="0">
-                    滚转
-                  </FormLabel>
-                  <NumberInput
-                    size="sm"
-                    id="roll"
-                    value={ptzAnglesOpt.roll}
-                    onChange={(value) => {
-                      handleAnglesOptChange("roll", value);
-                    }}
-                  >
-                    <NumberInputField />
-                  </NumberInput>
-                </FormControl>
-
-                <FormControl display="flex" alignItems="center">
-                  <FormLabel htmlFor="yaw" mb="0">
-                    航向
-                  </FormLabel>
-                  <NumberInput
-                    size="sm"
-                    id="yaw"
-                    value={ptzAnglesOpt.yaw}
-                    onChange={(value) => {
-                      handleAnglesOptChange("yaw", value);
-                    }}
-                  >
-                    <NumberInputField />
-                  </NumberInput>
-                </FormControl>
-              </Flex>
-              <Button size={"sm"} onClick={openAngles}>设置云台角度</Button>
-            </Card>
-
-            <Card p='2'>
-              <Flex className="space-x-1">
-                <FormControl display="flex" alignItems="center">
-                  <FormLabel htmlFor="latitude">经度</FormLabel>
-                  <NumberInput
-                    size="sm"
-                    id="latitude"
-                    value={ptzLocationOpt.latitude}
-                    onChange={(value) => {
-                      handleLocationOptChange("latitude", value);
-                    }}
-                  >
-                    <NumberInputField />
-                  </NumberInput>
-                </FormControl>
-
-                <FormControl display="flex" alignItems="center">
-                  <FormLabel htmlFor="longitude" mb="0">
-                    纬度
-                  </FormLabel>
-                  <NumberInput
-                    size="sm"
-                    id="longitude"
-                    value={ptzLocationOpt.longitude}
-                    onChange={(value) => {
-                      handleLocationOptChange("longitude", value);
-                    }}
-                  >
-                    <NumberInputField />
-                  </NumberInput>
-                </FormControl>
-
-                <FormControl display="flex" alignItems="center">
-                  <FormLabel htmlFor="yaw" mb="0" width={"2rem"}>
-                    海拔
-                  </FormLabel>
-                  <NumberInput
-                    size="sm"
-                    id="yaw"
-                    value={ptzLocationOpt.altitude}
-                    onChange={(value) => {
-                      handleLocationOptChange("altitude", value);
-                    }}
-                  >
-                    <NumberInputField />
-                  </NumberInput>
-                </FormControl>
-              </Flex>
-
-              <Button size={"sm"} onClick={openLocation}>设置目标位置</Button>
-            </Card>
-
-
-            <Card p='2'>
-              <Button
-                onClick={() => {
-                  onSendCommand(reboot());
-                }}
-              >
-                重启
-              </Button>
-            </Card>
-          </Box>
-
-
-          <Divider />
-          <Box className="space-x-1">
-            <Button>开始温控</Button>
-            <Button>停止温控</Button>
-            <Button>设置温度</Button>
-          </Box>
+            <Button
+              onClick={() => {
+                onSendCommand(reboot());
+              }}
+            >
+              重启
+            </Button>
+          </Card>
         </Box>
 
+        <Card p="4" className="flex-1 space-y-2 p-2">
+          <p className="text-center">载荷温度： {} ℃</p>
+
+          <Card className="space-y-2 p-2">
+            <Button
+              onClick={() => {
+                onSendCommand(start_control());
+              }}
+            >
+              开始温控
+            </Button>
+            <Button
+              onClick={() => {
+                onSendCommand(stop_control());
+              }}
+            >
+              停止温控
+            </Button>
+          </Card>
+
+          <Card w="100%" className="mt-6 space-y-1">
+            <FormControl display="flex" alignItems="center">
+              <NumberInput
+                size="sm"
+                id="temperature"
+                value={targetTemperature}
+                onChange={(valueAsString, valueAsNumber) => {
+                  setTargetTemperature(valueAsNumber);
+                }}
+              >
+                <NumberInputField />
+              </NumberInput>
+              <FormLabel htmlFor="temperature">℃</FormLabel>
+            </FormControl>
+            <Button
+              w="100%"
+              onClick={() => {
+                onSendCommand(set_temperature(targetTemperature));
+              }}
+            >
+              设置温度
+            </Button>
+          </Card>
+        </Card>
 
         {/* 遮罩层，挡住操作 */}
-        {isDisabled && <Box bg="blackAlpha.500" className="absolute w-full h-full" style={{ margin: 0 }}>
-        </Box>}
+        {isDisabled && (
+          <Box
+            bg="blackAlpha.500"
+            className="absolute w-full h-full"
+            style={{ margin: 0 }}
+          ></Box>
+        )}
 
-        <Modal isOpen={isAnglesOpen} onClose={closeAngles}>
+        {/* 以下为弹出层 */}
+        <Modal isOpen={isAnglesOpen} size="4xl" onClose={closeAngles}>
           <ModalOverlay />
           <ModalContent>
             <ModalHeader>设置云台角度</ModalHeader>
-            <ModalBody>
+            <Flex className="space-x-1 p-2">
+              <FormControl display="flex" alignItems="center">
+                <FormLabel htmlFor="pitch">俯仰</FormLabel>
 
-            </ModalBody>
+                <NumberInput
+                  size="sm"
+                  id="pitch"
+                  value={ptzAnglesOpt.pitch}
+                  onChange={(value) => {
+                    handleAnglesOptChange("pitch", value);
+                  }}
+                >
+                  <NumberInputField />
+                </NumberInput>
+              </FormControl>
+
+              <FormControl display="flex" alignItems="center">
+                <FormLabel htmlFor="roll" mb="0">
+                  滚转
+                </FormLabel>
+                <NumberInput
+                  size="sm"
+                  id="roll"
+                  value={ptzAnglesOpt.roll}
+                  onChange={(value) => {
+                    handleAnglesOptChange("roll", value);
+                  }}
+                >
+                  <NumberInputField />
+                </NumberInput>
+              </FormControl>
+
+              <FormControl display="flex" alignItems="center">
+                <FormLabel htmlFor="yaw" mb="0">
+                  航向
+                </FormLabel>
+                <NumberInput
+                  size="sm"
+                  id="yaw"
+                  value={ptzAnglesOpt.yaw}
+                  onChange={(value) => {
+                    handleAnglesOptChange("yaw", value);
+                  }}
+                >
+                  <NumberInputField />
+                </NumberInput>
+              </FormControl>
+            </Flex>
+            <ModalBody></ModalBody>
 
             <ModalFooter>
               <Button mr={3} onClick={closeAngles}>
                 关闭
               </Button>
               <Button
-                colorScheme='blue'
+                colorScheme="blue"
                 onClick={() => {
                   onSendCommand(
                     set_ptz_angles(false, {
@@ -231,12 +250,57 @@ export function AppSend({
           </ModalContent>
         </Modal>
 
-        <Modal isOpen={isLocationOpen} onClose={closeLocation}>
+        <Modal isOpen={isLocationOpen} size="4xl" onClose={closeLocation}>
           <ModalOverlay />
           <ModalContent>
             <ModalHeader>设置目标位置</ModalHeader>
-            <ModalBody>
 
+            <ModalBody>
+              <Flex className="space-x-1 p-2">
+                <FormControl display="flex" alignItems="center">
+                  <FormLabel htmlFor="latitude">纬度</FormLabel>
+                  <NumberInput
+                    size="sm"
+                    id="latitude"
+                    value={ptzLocationOpt.latitude}
+                    onChange={(value) => {
+                      handleLocationOptChange("latitude", value);
+                    }}
+                  >
+                    <NumberInputField />
+                  </NumberInput>
+                </FormControl>
+
+                <FormControl display="flex" alignItems="center">
+                  <FormLabel htmlFor="longitude">经度</FormLabel>
+                  <NumberInput
+                    size="sm"
+                    id="longitude"
+                    value={ptzLocationOpt.longitude}
+                    onChange={(value) => {
+                      handleLocationOptChange("longitude", value);
+                    }}
+                  >
+                    <NumberInputField />
+                  </NumberInput>
+                </FormControl>
+
+                <FormControl display="flex" alignItems="center">
+                  <FormLabel htmlFor="yaw" width={"2rem"}>
+                    海拔
+                  </FormLabel>
+                  <NumberInput
+                    size="sm"
+                    id="yaw"
+                    value={ptzLocationOpt.altitude}
+                    onChange={(value) => {
+                      handleLocationOptChange("altitude", value);
+                    }}
+                  >
+                    <NumberInputField />
+                  </NumberInput>
+                </FormControl>
+              </Flex>
             </ModalBody>
 
             <ModalFooter>
@@ -244,7 +308,7 @@ export function AppSend({
                 关闭
               </Button>
               <Button
-                colorScheme='blue'
+                colorScheme="blue"
                 onClick={() => {
                   onSendCommand(
                     set_ptz_localtion({

@@ -3,7 +3,6 @@
   height: 100vh;
   overflow: hidden;
   margin: 0 auto;
-  backgorund: #000;
 }
 
 .flex-center {
@@ -14,8 +13,8 @@
 
 
 #plant {
-  tranform-origin: center center;
-
+  transform-origin: center center;
+  margin: 25% 0;
 }
 #ptz {
   position: absolute;
