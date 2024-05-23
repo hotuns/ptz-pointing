@@ -3,6 +3,7 @@ import { SerialPortStream } from "@serialport/stream";
 import { MockBinding, MockBindingInterface } from "@serialport/binding-mock";
 import { CustomParser } from "./customParser";
 import crc16 from "crc/crc16xmodem";
+import log from "electron-log/renderer";
 
 export enum TLVType {
   "飞控当前姿态角" = 0x01,
@@ -30,8 +31,8 @@ export class DeviceCommunicator {
 
   constructor(
     portPath: string,
-    mock: boolean,
-    onDataReceived: (data: any) => void
+    onDataReceived: (data: any) => void,
+    mock: boolean = false
   ) {
     if (mock) {
       MockBinding.createPort("/dev/ROBOT", { echo: true, record: true });
@@ -44,6 +45,8 @@ export class DeviceCommunicator {
         parity: "none",
         stopBits: 1,
       });
+
+      this.startMockData();
     } else {
       this.port = new SerialPort({
         path: portPath,
@@ -61,13 +64,16 @@ export class DeviceCommunicator {
     this.parser = this.port.pipe(new CustomParser());
 
     this.parser.on("data", (data: Buffer) => {
-      console.log("Receive:", `count: ${this.receiveCount++}`);
+      log.info("Receive:", data.toString("hex"));
+
       let TLV_list = this.parseTLV(data);
       let parsed_TLV_list = TLV_list.map((packet) => {
         return this.handleTLV(packet);
       });
+
       let result = parsed_TLV_list.filter((x) => x !== undefined);
-      console.log(result);
+      console.log("Parsed", result);
+
       onDataReceived(result);
     });
   }
@@ -77,9 +83,13 @@ export class DeviceCommunicator {
   }
 
   public startMockData() {
+    console.log("startMockData");
+
     const mocklist = [
-      // "AA 90 32 01 0D 66 66 E6 BF CD CC 4C BE 66 66 64 43 F1 02 0E 02 10 80 71 0F 00 0D AC 3B F8 3E 1E 00 F1 21 0F 84 C9 62 42 00 00 00 00 30 B2 F6 41 03 00 F1 52 2C",
+      "AA 90 32 01 0D 66 66 E6 BF CD CC 4C BE 66 66 64 43 F1 02 0E 02 10 80 71 0F 00 0D AC 3B F8 3E 1E 00 F1 21 0F 84 C9 62 42 00 00 00 00 30 B2 F6 41 03 00 F1 52 2C",
       "AA 90 32 01 0D 00 00 00 00 00 00 00 00 00 00 00 00 40 02 0E 00 00 00 00 00 00 00 00 00 00 00 00 00 40 21 0F 00 00 00 00 00 00 00 00 00 00 00 00 03 00 40 5C 0C AA 90 32 01 0D 00 00 00 00 00 00 00 00 00 00 00 00 41 02 0E 00 00 00 00 00 00 00 00 00 00 00 00 00 41 21 0F 00 00 00 00 00 00 00 00 00 00 00 00 03 00 41 69 70 AA 90 32 01 0D 00 00 00 00 00 00 00 00 00 00 00 00 42 02 0E 00 00 00 00 00 00 00 00 00 00 00 00 00 42 21 0F 00 00 00 00 00 00 00 00 00 00 00 00 03 00 42 36 F4 AA 90 32 01 0D 00 00 00 00 00 00 00 00 00 00 00 00 43 02 0E 00 00 00 00 00 00 00 00 00 00 00 00 00 43 21 0F 00 00 00 00 00 00 00 00 00 00 00 00 03 00 43 03 88 AA 90 32 01 0D 00 00 00 00 00 00 00 00 00 00 00 00 44 02 0E 00 00 00 00 00 00 00 00 00 00 00 00 00 44 21 0F 00 00 00 00 00 00 00 00 00 00 00 00 03 00 44 A9 EC AA 90 32 01 0D 00 00 00 00 00 00 00 00 00 00 00 00 45 02 0E 00 00 00 00 00 00 00 00 00 00 00 00 00 45 21 0F 00 00 00 00 00 00 00 00 00 00 00 00 03 00 45 9C 90 AA 90 32 01 0D 00 00 00 00 00 00 00 00 00 00 00 00 46 02 0E 00 00 00 00 00 00 00 00 00 00 00 00 00 46 21 0F 00 00 00 00 00 00 00 00 00 00 00 00 03 00 46 C3 14 AA 90 32 01 0D 00 00 00 00 00 00 00 00 00 00 00 00 47 02 0E 00 00 00 00 00 00 00 00 00 00 00 00 00 47 21 0F 00 00 00 00 00 00 00 00 00 00 00 00 03 00 47 F6 68 AA 90 1E 31 0D A0 2A 71 0F 42 19 AA 3B 00 00 00 00 A7 32 0B 95 01 56 12 F4 01 4A 01 00 C0 A7 AD 86 AA 90 32 01 0D 00 00 00 00 00 00 00 00 00 00 00 00 48 02 0E 00 00 00 00 00 00 00 00 00 00 00 00 00 48 21 0F 00 00 00 00 00 00 00 00 00 00 00 00 03 00 48 97 DD AA 90 32 01 0D 00 00 00 00 00 00 00 00 00 00 00 00 49 02 0E 00 00 00 00 00 00 00 00 00 00 00 00 00 49 21 0F 00 00 00 00 00 00 00 00 00 00 00 00 03 00 49 A2 A1 AA 90 32 01 0D 00 00 00 00 00 00 00 00 00 00 00 00 4A 02 0E 00 00 00 00 00 00 00 00 00 00 00 00 00 4A 21 0F 00 00 00 00 00 00 00 00 00 00 00 00 03 00 4A FD 25 AA 90 32 01 0D 00 00 00 00 00 00 00 00 00 00 00 00 4B 02 0E 00 00 00 00 00 00 00 00 00 00 00 00 00 4B 21 0F 00 00 00 00 00 00 00 00 00 00 00 00 03 00 4B C8 59 AA 90 32 01 0D 00 00 00 00 00 00 00 00 00",
+      "AA 90 1D 71 19 03 02 03 14 00 00 00 00 01 23 00 03 FF FE F7 B9 FF FE DC 93 FF FE 9E 0F 65 B2 57 FC",
+      "AA 90 1D 71 19 03 02 03 14 00 00 00 00 13 88 00 01 00 00 0A E7 00 00 0A 98 00 00 0B 06 59 C8 57 FC",
     ];
 
     setInterval(() => {
@@ -130,7 +140,7 @@ export class DeviceCommunicator {
 
     frame.writeUInt16LE(crc, frame.length - 2); // CRC 校验
 
-    console.log("Send:", frame, `count: ${this.sendCount++}`);
+    log.info("Send", frame.toString("hex"));
 
     return new Promise((resolve, reject) => {
       this.port.write(frame, (err) => {
@@ -252,17 +262,68 @@ export class DeviceCommunicator {
         };
 
       case TLVType.协议透传接收:
-        // 首先获取data总长度
         // 第1个字节为类型，1:飞控 2:云台 3:杂项
-        // 第2位到倒数第2个位为payload
-        // 最后一个字节为计数器
+        // 第2位到结束为payload
         let type = data.readUInt8(0);
-        let payload = data.slice(1, data.length - 1);
-        let count = data.readUInt8(data.length - 1);
+        let payload = data.slice(1);
+
+        let payloadData = {
+          // 温控开关
+          switch: false,
+          // 温度1
+          temperature1: 0,
+          // 温度2
+          temperature2: 0,
+          // 温度3
+          temperature3: 0,
+          // 采样方式
+          method: 0,
+        };
+        // 解析payload
+        // 读寄存器
+        // 0028 温控开关
+        // 0029-0030 设定温度
+        // 0031 设定采样方式
+        // 0032-0033 温度1   0034-0035 温度2   0036-0037 温度3
+        // ex：02 03 14 00 00 00 00 01 23 00 03 FF FE F7 B9 FF FE DC 93 FF FE 9E 0F 65 B2
+        // （0066温控开00 00温控关；0x0123当前设定值为291/100=2.91℃  ；
+        // 0x00 03 采样方式为3； 0xFFFF FF12 =-238,-2.38℃ 0x0000 0C49=3145，温度为31.45）
+
+        // 校验payload是否完整
+        // 第三位是字节数
+        if (payload.length !== 3 + payload.readUInt8(2) + 2) {
+          console.warn("Payload length error");
+
+          let passThrough: IPassThrough = {
+            type,
+            data: payloadData,
+          };
+
+          return {
+            id: TLVType.协议透传接收,
+            string: "协议透传接收",
+            value: passThrough,
+          };
+        }
+
+        let payload_payload = payload.slice(3, payload.length - 2);
+
+        // 温控开关
+        if (payload_payload.readUInt16LE(0) === 0x0066) {
+          payloadData.switch = true;
+        }
+
+        // 设定温度
+        payloadData.temperature1 = payload_payload.readInt16LE(2) / 100;
+        payloadData.temperature2 = payload_payload.readInt16LE(4) / 100;
+        payloadData.temperature3 = payload_payload.readInt16LE(6) / 100;
+
+        // 采样方式
+        payloadData.method = payload_payload.readUInt16LE(8);
+
         let passThrough: IPassThrough = {
           type,
-          data: payload.readUInt8(0),
-          count,
+          data: payloadData,
         };
 
         return {

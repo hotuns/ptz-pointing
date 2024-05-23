@@ -99,7 +99,7 @@ interface IPassThrough {
   /**类型 */
   type: number;
   /**数据 */
-  data: number;
+  data: any;
   /**计数器 U8 每次发送数据+1 */
-  count: number;
+  count?: number;
 }

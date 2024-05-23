@@ -75,6 +75,7 @@ export function NavComponent(props: {
           target = pitch + step;
           target = Math.max(target, ptz.pitch_limit[0]);
           target = Math.min(target, ptz.pitch_limit[1]);
+          console.log("up", "target", target);
           setPitch(target);
           break;
         case "down":
@@ -82,6 +83,8 @@ export function NavComponent(props: {
           target = pitch - step;
           target = Math.max(target, ptz.pitch_limit[0]);
           target = Math.min(target, ptz.pitch_limit[1]);
+          console.log("down", "target", target);
+
           setPitch(target);
           break;
         case "left":
@@ -89,6 +92,8 @@ export function NavComponent(props: {
           target = yaw - step;
           target = Math.max(target, ptz.yaw_limit[0]);
           target = Math.min(target, ptz.yaw_limit[1]);
+          console.log("left", "target", target);
+
           setYaw(target);
           break;
         case "right":
@@ -96,6 +101,8 @@ export function NavComponent(props: {
           target = yaw + step;
           target = Math.max(target, ptz.yaw_limit[0]);
           target = Math.min(target, ptz.yaw_limit[1]);
+          console.log("right", "target", target);
+
           setYaw(target);
           break;
         default:
@@ -132,7 +139,7 @@ export function NavComponent(props: {
   }
   const changePtzMode = (value: string) => {
     setPtzMode(value as "1" | "2" | "3");
-    set_ptz_mode(parseInt(value));
+    onSendCommand(set_ptz_mode(parseInt(value)));
   };
 
   return (

@@ -1,9 +1,9 @@
 {
-  "name": "electron-vite-react",
+  "name": "ptz-pointing",
   "version": "2.2.0",
   "main": "dist-electron/main/index.js",
   "description": "Electron Vite React boilerplate.",
-  "author": "草鞋没号 <308487730@qq.com>",
+  "author": "hotuns",
   "license": "MIT",
   "private": true,
   "debug": {
@@ -25,6 +25,7 @@
     "@emotion/styled": "^11.11.0",
     "@serialport/bindings-cpp": "^12.0.1",
     "crc": "^4.3.2",
+    "electron-log": "^5.1.4",
     "electron-updater": "^6.1.1",
     "framer-motion": "^10.16.4",
     "serialport": "^12.0.0"

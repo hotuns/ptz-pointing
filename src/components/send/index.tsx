@@ -8,7 +8,7 @@ import {
   useDisclosure,
   Divider,
 } from "@chakra-ui/react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   NumberInput,
   NumberInputField,
@@ -28,6 +28,7 @@ import {
   start_control,
   stop_control,
   set_temperature,
+  read_status,
 } from "@/DeviceCommunicator/commands/pass_through";
 
 export function AppSend({
@@ -36,6 +37,7 @@ export function AppSend({
   ptz,
   ptzExpectAttitude,
   ptzCurrentAttitude,
+  payloadTemperature,
 }: {
   isDisabled: boolean;
   onSendCommand: (command: Buffer) => void;
@@ -48,6 +50,13 @@ export function AppSend({
   };
   ptzExpectAttitude: IPtzExpectlAttitude;
   ptzCurrentAttitude: IPtzAttitude;
+  payloadTemperature: {
+    switch: boolean;
+    temperature1: number;
+    temperature2: number;
+    temperature3: number;
+    method: number;
+  };
 }) {
   const [ptzAnglesOpt, setPtzAnglesOpt] = useState({
     pitch: 0,
@@ -85,6 +94,14 @@ export function AppSend({
 
   const [targetTemperature, setTargetTemperature] = useState(20);
 
+  const startControl = () => {
+    onSendCommand(start_control());
+  };
+
+  const stopControl = () => {
+    onSendCommand(stop_control());
+  };
+
   return (
     <>
       <Flex
@@ -120,23 +137,24 @@ export function AppSend({
         </Box>
 
         <Card p="4" className="flex-1 space-y-2 p-2">
-          <p className="text-center">载荷温度： {} ℃</p>
+          <p className="text-center">
+            是否开始控制： {payloadTemperature.switch ? "是" : "否"}
+          </p>
+          <p className="text-center">当前采样： {payloadTemperature.method}</p>
+
+          <p className="text-center">
+            载荷温度1： {payloadTemperature.temperature1} ℃
+          </p>
+          <p className="text-center">
+            载荷温度2： {payloadTemperature.temperature2} ℃
+          </p>
+          <p className="text-center">
+            载荷温度3： {payloadTemperature.temperature3} ℃
+          </p>
 
           <Card className="space-y-2 p-2">
-            <Button
-              onClick={() => {
-                onSendCommand(start_control());
-              }}
-            >
-              开始温控
-            </Button>
-            <Button
-              onClick={() => {
-                onSendCommand(stop_control());
-              }}
-            >
-              停止温控
-            </Button>
+            <Button onClick={startControl}>开始温控</Button>
+            <Button onClick={stopControl}>停止温控</Button>
           </Card>
 
           <Card w="100%" className="mt-6 space-y-1">

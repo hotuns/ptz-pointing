@@ -34,14 +34,17 @@ export class CustomParser extends Transform {
       const frameWithoutCRC = frame.slice(0, frame.length - 2);
       const calculatedCRC = crc16(frameWithoutCRC);
 
-      // CRC校验
-      if (receivedCRC === calculatedCRC) {
-        // CRC匹配，将数据（去除帧头和CRC）发送到下一个流
-        this.push(frameWithoutCRC.slice(3));
-      } else {
-        // CRC不匹配，记录警告
-        console.warn("CRC mismatch. Frame dropped.", frameWithoutCRC);
-      }
+      // 暂时不做CRC校验
+      this.push(frameWithoutCRC.slice(3));
+
+      // // CRC校验
+      // if (receivedCRC === calculatedCRC) {
+      //   // CRC匹配，将数据（去除帧头和CRC）发送到下一个流
+      //   this.push(frameWithoutCRC.slice(3));
+      // } else {
+      //   // CRC不匹配，记录警告
+      //   console.warn("CRC mismatch. Frame dropped.", frameWithoutCRC);
+      // }
 
       // 从缓冲区中移除已处理的帧
       this.buffer = this.buffer.slice(packetLength + 3);

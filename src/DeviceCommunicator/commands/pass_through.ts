@@ -4,6 +4,7 @@ import { CommandTLVType, formatCommand } from "./tools";
 const PassThroughCommandMap = {
   开始温控: "02 10 00 28 00 01 02 00 66 34 A2",
   停止温控: "02 10 00 28 00 01 02 00 00 B4 88",
+  读取状态: "02 03 00 28 00 0A 45 F6",
 };
 
 /**
@@ -62,7 +63,7 @@ export function set_temperature(temperature: number): Buffer {
   // Tx：02 10 00 29 00 02 04 00 00 07 D0 3D 35
 
   const target = temperature * 100;
-  const payload = Buffer.alloc(9);
+  const payload = Buffer.alloc(11);
   payload[0] = 0x02; // 设备地址
   payload[1] = 0x10; // 功能码，表示预置多个寄存器
   payload[2] = 0x00; // 寄存器起始地址高字节
@@ -86,4 +87,27 @@ export function set_temperature(temperature: number): Buffer {
   command[command.length - 1] = 0x01; // 计数器固定为1
 
   return command;
+}
+
+/**
+ * 开始读取状态
+ */
+export function read_status(): Buffer {
+  // 首先创建buffer，长度为1+plyload.length+1
+  const buffer = Buffer.alloc(1 + 7 + 1); // 总长度为 9 字节
+
+  // 设置指令
+  // 类型可选 1,2,3 1:飞控 2:云台 3:杂项
+  buffer.writeUInt8(3, 0); // 写死为3
+
+  // payload
+  const payload = Buffer.from(
+    PassThroughCommandMap["读取状态"].split(" ").map((v) => parseInt(v, 16))
+  );
+  payload.copy(buffer, 1);
+
+  // 计数器 1
+  buffer.writeUInt8(1, 8);
+
+  return formatCommand(buffer, CommandTLVType.协议透传);
 }

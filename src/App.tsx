@@ -5,8 +5,10 @@ import { AppStatus } from "./components/status";
 import { AppSend } from "./components/send";
 import { Box, Card, Flex, Select, Image, Button } from "@chakra-ui/react";
 import { PlantCom } from "./components/plant";
+import log from "electron-log/renderer";
+import { read_status } from "./DeviceCommunicator/commands/pass_through";
 
-let mock = false;
+let isMock = true;
 let communicator: DeviceCommunicator | null = null;
 
 const ptzlist = [
@@ -54,7 +56,7 @@ function App() {
   }
 
   function handlePortStart() {
-    communicator = new DeviceCommunicator(currentPort, false, onDataReceived);
+    communicator = new DeviceCommunicator(currentPort, onDataReceived, isMock);
     communicator!.open().then(() => {
       set_isBtnDisabled(false);
     });
@@ -118,10 +120,20 @@ function App() {
 
   // 透传接受的数据
   // 载荷温度
-  const [payloadTemperature, setPayloadTemperature] = useState<number>(0);
+  const [payloadTemperature, setPayloadTemperature] = useState({
+    // 温控开关
+    switch: false,
+    // 温度1
+    temperature1: 0,
+    // 温度2
+    temperature2: 0,
+    // 温度3
+    temperature3: 0,
+    // 采样方式
+    method: 0,
+  });
 
   function onDataReceived(list: { id: TLVType; string: string; value: any }[]) {
-    // console.log("[App.tsx]", "onDataReceived", list);
     list.forEach((data) => {
       switch (data.id) {
         case TLVType.飞控当前姿态角:
@@ -141,13 +153,13 @@ function App() {
           break;
         case TLVType.协议透传接收:
           let value = data.value;
-          let payload = value.data;
           // 开始解析payload
-          console.log("payload", payload);
+          console.log("透传payload", value);
 
-          setPayloadTemperature(0);
+          setPayloadTemperature(value);
           break;
         default:
+          log.info(data.string, JSON.stringify(data.value));
           break;
       }
     });
@@ -231,6 +243,7 @@ function App() {
             onSendCommand={onSendCommand}
             ptzCurrentAttitude={ptzCurrentAttitude}
             ptzExpectAttitude={ptzExpectAttitude}
+            payloadTemperature={payloadTemperature}
           />
         </Card>
       </div>

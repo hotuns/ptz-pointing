@@ -1,7 +1,13 @@
-import { app, BrowserWindow, shell, ipcMain } from "electron";
+import { app, BrowserWindow, shell, ipcMain, Menu } from "electron";
 import { release } from "node:os";
 import { join } from "node:path";
 import { update } from "./update";
+import log from "electron-log/main";
+import { TagLabel } from "@chakra-ui/react";
+
+log.initialize();
+
+log.info("主进程启动");
 
 // The built directory structure
 //
@@ -65,6 +71,35 @@ async function createWindow() {
   } else {
     win.loadFile(indexHtml);
   }
+
+  // setMenu
+  const template: any[] = [];
+  const menu = Menu.buildFromTemplate([
+    {
+      label: "选项",
+      submenu: [
+        {
+          label: "打开日志文件夹",
+          click: () => {
+            const logPath = join(
+              app.getPath("appData"),
+              app.getName(),
+              "/logs"
+            );
+            shell.openPath(logPath);
+          },
+        },
+        {
+          label: "打开控制台",
+          click: () => {
+            win?.webContents.openDevTools();
+          },
+        },
+      ],
+    },
+  ]);
+  //  设置应用菜单
+  Menu.setApplicationMenu(menu);
 
   // Test actively push message to the Electron-Renderer
   win.webContents.on("did-finish-load", () => {
