@@ -12,7 +12,7 @@ import dayjs from "dayjs";
 import { useExportCsv } from "./hooks/export-csv-hook";
 import { useExportTxtLog } from "./hooks/export-txt-hook";
 
-let isMock = false;
+let isMock = true;
 let communicator: DeviceCommunicator | null = null;
 
 const ptzlist = [
