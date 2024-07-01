@@ -191,6 +191,7 @@ export class DeviceCommunicator {
     const data = packet.data;
     server.setBroadcast(true); 
    
+   console.log('接收 = ', data);
    
     let _json = null;
     let _jsonString = "";
