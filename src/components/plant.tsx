@@ -8,7 +8,7 @@ import {
   StatNumber,
   StatHelpText,
 } from "@chakra-ui/react";
-import PlantImg from "@/assets/plant.png";
+import PlantImg from "@/assets/p.png";
 import PTZIcon from "@/assets/ptz.svg";
 
 export function PlantCom(props: {
@@ -55,91 +55,99 @@ export function PlantCom(props: {
     .join("");
 
   return (
-    <div className="w-full h-full relative">
-      <Card className="w-full h-full flex flex-col">
-      <Box position={"relative"} className="flex-1">
-        <Box position={"absolute"} left={"5"}>
-          <Text fontSize="md">飞控</Text>
-          <Box>
-            <Text fontSize="xs">
-              pitch: {controlCurrentAttitude.pitch.toFixed(2)}
-            </Text>
+    <div className="w-full h-full flex flex-col">
+      <Card className="w-full">
+        <Box position={"relative"} className="">
+          <Image
+            id="plant"
+            src={PlantImg}
+            style={{
+              transform: `rotate(${controlCurrentAttitude.yaw}deg)`,
+            }}
+          />
+          <Image
+            id="ptz"
+            src={PTZIcon}
+            style={{
+              transform: `rotate(${computedPtzAttitude(
+                controlCurrentAttitude.yaw,
+                ptzCurrentAttitude.yaw
+              )}deg)`,
+            }}
+          />
+        </Box>
+      </Card>
 
-            <Text fontSize="xs">
-              roll: {controlCurrentAttitude.roll.toFixed(2)}
-            </Text>
+      <Card className="w-full">
+        <Box className="flex w-full">
+          <Box className="w-full text-center">
+            <Text fontSize="md">飞控</Text>
+            <Box>
+              <Text fontSize="xs">
+                pitch: {controlCurrentAttitude.pitch.toFixed(2)}
+              </Text>
 
-            <Text fontSize="xs">
-              yaw: {controlCurrentAttitude.yaw.toFixed(2)}
-            </Text>
+              <Text fontSize="xs">
+                roll: {controlCurrentAttitude.roll.toFixed(2)}
+              </Text>
+
+              <Text fontSize="xs">
+                yaw: {controlCurrentAttitude.yaw.toFixed(2)}
+              </Text>
+            </Box>
+          </Box>
+
+          <Box className="w-full text-center">
+            <Text fontSize="md">云台</Text>
+            <Box>
+              <Text fontSize="xs">
+                pitch: {ptzCurrentAttitude.pitch.toFixed(2)}
+              </Text>
+
+              <Text fontSize="xs">
+                roll: {ptzCurrentAttitude.roll.toFixed(2)}
+              </Text>
+
+              <Text fontSize="xs">
+                yaw: {ptzCurrentAttitude.yaw.toFixed(2)}
+              </Text>
+            </Box>
           </Box>
         </Box>
 
-        <Box position={"absolute"} right={"5"}>
-          <Text fontSize="md">云台</Text>
-          <Box>
-            <Text fontSize="xs">
-              pitch: {ptzCurrentAttitude.pitch.toFixed(2)}
-            </Text>
+        <div className="w-full flex flex-col">
+          <Box textAlign={"center"}>{power_io_status_array_fill_result}</Box>
+          <Box className="flex space-x-4" justifyContent={"space-between"}>
+            <Stat textAlign={"center"}>
+              <StatNumber>
+                {(deviceStatus.temperature / 100).toFixed(2)}
+              </StatNumber>
+              <StatHelpText>温度</StatHelpText>
+            </Stat>
 
-            <Text fontSize="xs">
-              roll: {ptzCurrentAttitude.roll.toFixed(2)}
-            </Text>
+            <Stat textAlign={"center"}>
+              <StatNumber>
+                {(deviceStatus.main_voltage / 100).toFixed(2)}
+              </StatNumber>
+              <StatHelpText>主电压</StatHelpText>
+            </Stat>
 
-            <Text fontSize="xs">yaw: {ptzCurrentAttitude.yaw.toFixed(2)}</Text>
+            <Stat textAlign={"center"}>
+              <StatNumber>
+                {(deviceStatus.sys_voltage / 100).toFixed(2)}
+              </StatNumber>
+              <StatHelpText>系统电压</StatHelpText>
+            </Stat>
+
+            <Stat textAlign={"center"}>
+              <StatNumber>
+                {(deviceStatus.chip_voltage / 100).toFixed(2)}
+              </StatNumber>
+              <StatHelpText>芯片电压</StatHelpText>
+            </Stat>
           </Box>
-        </Box>
-
-        <div className="h-full">
-        <Image
-          id="plant"
-          src={PlantImg}
-          style={{
-            transform: `rotate(${controlCurrentAttitude.yaw}deg)`,
-          }}
-        />
-        <Image
-          id="ptz"
-          src={PTZIcon}
-          style={{
-            transform: `rotate(${computedPtzAttitude(
-              controlCurrentAttitude.yaw,
-              ptzCurrentAttitude.yaw
-            )}deg)`,
-          }}
-        />
         </div>
-      </Box>
-
-      <div className="absolute bottom-1 w-full flex flex-col">
-      <Box className="flex space-x-4" justifyContent={"space-between"}>
-        <Stat textAlign={"center"}>
-          <StatNumber>{(deviceStatus.temperature / 100).toFixed(2)}</StatNumber>
-          <StatHelpText>温度</StatHelpText>
-        </Stat>
-
-        <Stat textAlign={"center"}>
-          <StatNumber>
-            {(deviceStatus.main_voltage / 100).toFixed(2)}
-          </StatNumber>
-          <StatHelpText>主电压</StatHelpText>
-        </Stat>
-
-        <Stat textAlign={"center"}>
-          <StatNumber>{(deviceStatus.sys_voltage / 100).toFixed(2)}</StatNumber>
-          <StatHelpText>系统电压</StatHelpText>
-        </Stat>
-
-        <Stat textAlign={"center"}>
-          <StatNumber>
-            {(deviceStatus.chip_voltage / 100).toFixed(2)}
-          </StatNumber>
-          <StatHelpText>芯片电压</StatHelpText>
-        </Stat>
-      </Box>
-      <Box>{power_io_status_array_fill_result}</Box>
-      </div>
-    </Card>
+      </Card>
     </div>
   );
 }

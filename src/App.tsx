@@ -8,11 +8,11 @@ import { PlantCom } from "./components/plant";
 import log from "electron-log/renderer";
 import { read_status } from "./DeviceCommunicator/commands/pass_through";
 import EchartTemperature from "./components/echarts/EchartTemperature";
-import dayjs from 'dayjs';
+import dayjs from "dayjs";
 import { useExportCsv } from "./hooks/export-csv-hook";
 import { useExportTxtLog } from "./hooks/export-txt-hook";
 
-let isMock = false;
+let isMock = true;
 let communicator: DeviceCommunicator | null = null;
 
 const ptzlist = [
@@ -37,8 +37,9 @@ function App() {
     const index = e.target.value;
     set_currentPtz(ptzlist[parseInt(index)]);
   };
-  const {handleDownloadCsv} = useExportCsv();
-  const { handleDownloadTxt } = useExportTxtLog()
+
+  const { handleDownloadCsv } = useExportCsv();
+  const { handleDownloadTxt } = useExportTxtLog();
 
   const [echart, setEchart] = useState<any[]>([]);
 
@@ -47,37 +48,38 @@ function App() {
 
   const [isBtnDisabled, set_isBtnDisabled] = useState<boolean>(true);
 
-
   const exportFile = (value: string) => {
-    switch(value){
-      case "csv" : 
+    switch (value) {
+      case "csv":
         const fields = [
           {
-            label: '时间', // 中文表头
-            value: 'time'  // 对应的 JSON 属性
+            label: "时间", // 中文表头
+            value: "time", // 对应的 JSON 属性
           },
           {
-            label: '温度',
-            value: 'temperature'
+            label: "温度",
+            value: "temperature",
           },
           {
-            label: '采样方式',
-            value: 'method'
-          }
+            label: "采样方式",
+            value: "method",
+          },
         ];
-      const data = echart.map(item => ({
-        time: item[0],         // "时间" 对应 "time"
-        temperature: item[1],  // "温度" 对应 "temperature"
-        method: item[2]        // "采样方式" 对应 "method"
-      }));
-      handleDownloadCsv(fields, data)
-     return;
-     case "txt": 
-        const txts = echart.map(item => `${item[0]} ${item[1]} ${item[2]}`).join('\n');
-        handleDownloadTxt(txts)
-       return;
+        const data = echart.map((item) => ({
+          time: item[0], // "时间" 对应 "time"
+          temperature: item[1], // "温度" 对应 "temperature"
+          method: item[2], // "采样方式" 对应 "method"
+        }));
+        handleDownloadCsv(fields, data);
+        return;
+      case "txt":
+        const txts = echart
+          .map((item) => `${item[0]} ${item[1]} ${item[2]}`)
+          .join("\n");
+        handleDownloadTxt(txts);
+        return;
     }
-  }
+  };
 
   function reloadPortList() {
     DeviceCommunicator.list()
@@ -171,7 +173,6 @@ function App() {
     temperature3: 0,
     // 采样方式
     method: 0,
-    
   });
 
   function onDataReceived(list: { id: TLVType; string: string; value: any }[]) {
@@ -194,12 +195,20 @@ function App() {
           break;
         case TLVType.协议透传接收:
           let value = data.value;
-          const payload = value.data.method === 1 ? value.data.temperature1 : value.data.method === 2 ? value.data.temperature2 : value.data.temperature3;
+          const payload =
+            value.data.method === 1
+              ? value.data.temperature1
+              : value.data.method === 2
+              ? value.data.temperature2
+              : value.data.temperature3;
           // 开始解析payload
           setPayloadTemperature(value.data);
           log.info("温度:", `${value.data.method} ${payload} ℃`);
-          const formattedNow = dayjs().format('YYYY-MM-DD HH:mm:ss.SSS')
-          setEchart(prevNumbers => [...prevNumbers, [formattedNow, payload, value.data.method]])
+          const formattedNow = dayjs().format("YYYY-MM-DD HH:mm:ss.SSS");
+          setEchart((prevNumbers) => [
+            ...prevNumbers,
+            [formattedNow, payload, value.data.method],
+          ]);
           break;
         default:
           // log.info(data.string, JSON.stringify(data.value));
@@ -209,8 +218,8 @@ function App() {
   }
 
   function onSendCommand(command: Buffer) {
-    console.log("发送 = ", command.toString('hex'));
-    
+    console.log("发送 = ", command.toString("hex"));
+
     communicator!
       .send(command)
       .then(() => {
@@ -222,17 +231,20 @@ function App() {
   }
 
   return (
-    <Card className="p-2 w-full h-full select-none" bg="gray.100">
-      <div className="w-full h-full grid grid-cols-2">
-        <PlantCom
-          controlCurrentAttitude={controlCurrentAttitude}
-          ptzCurrentAttitude={ptzCurrentAttitude}
-          ptzExpectAttitude={ptzExpectAttitude}
-          devicePosition={devicePosition}
-          deviceStatus={deviceStatus}
-        />
+    <Card className="p-2 w-full h-full select-none " bg="gray.100">
+      <div className="w-full h-full flex space-x-2">
+        <Card className="w-[550px]">
+          <PlantCom
+            controlCurrentAttitude={controlCurrentAttitude}
+            ptzCurrentAttitude={ptzCurrentAttitude}
+            ptzExpectAttitude={ptzExpectAttitude}
+            devicePosition={devicePosition}
+            deviceStatus={deviceStatus}
+          />
+        </Card>
 
-        <Card>
+        <Card className="w-full">
+          {/* 连接 */}
           <Card>
             <Flex>
               <Select
@@ -282,6 +294,7 @@ function App() {
             </Flex>
           </Card>
 
+          {JSON.stringify(currentPtz)}
           <AppSend
             isDisabled={isBtnDisabled}
             ptz={currentPtz}
@@ -291,8 +304,12 @@ function App() {
             payloadTemperature={payloadTemperature}
             exportFile={exportFile}
           />
+
           <div className={`${isBtnDisabled ? "none" : "black"} w-full h-full`}>
-           <EchartTemperature echart={echart} method={payloadTemperature.method}/>
+            <EchartTemperature
+              echart={echart}
+              method={payloadTemperature.method}
+            />
           </div>
         </Card>
       </div>

@@ -7,7 +7,7 @@ import { TagLabel } from "@chakra-ui/react";
 
 log.initialize();
 
-// log.info("主进程启动");
+log.info("主进程启动");
 
 // The built directory structure
 //
