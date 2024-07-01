@@ -22,6 +22,7 @@ export function set_ptz_angles(
   angles?: TiltAngles,
   counter?: number
 ): Buffer {
+  console.log('set_ptz_angles', resetToCenter, angles, counter)
   const buffer = Buffer.alloc(14); // 总长度为 14 字节
 
   // 设置指令

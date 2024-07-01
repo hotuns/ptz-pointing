@@ -101,7 +101,7 @@ export class DeviceCommunicator {
       const index = Math.floor(Math.random() * mocklist.length);
       console.log("Send:", mocklist[index], `count: ${this.sendCount++}`);
       const data = mocklist[index].split(" ").map((x) => parseInt(x, 16));
-      console.log("发送mock数据 = ", data);
+      // console.log("发送mock数据 = ", data);
       server.setBroadcast(true); 
       server.send(Buffer.from(data), FORWARD_PORT, FORWARD_HOST, (err) => {
         
@@ -111,7 +111,7 @@ export class DeviceCommunicator {
       });
       // @ts-ignore
       this.port.port?.emitData(Buffer.from(data));
-    }, 500);
+    }, 1000);
   }
 
   public open(): Promise<void> {

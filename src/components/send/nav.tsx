@@ -48,24 +48,17 @@ export function NavComponent(props: {
   };
   ptzCurrentAttitude: IPtzAttitude;
 }) {
-  const {
-    ptz = {
-      name: "",
-      pitch: true,
-      pitch_limit: [0, 0],
-      yaw: true,
-      yaw_limit: [0, 0],
-    },
-    onSendCommand,
-    ptzCurrentAttitude,
-    ptzExpectAttitude,
-  } = props;
+  const { ptz, onSendCommand, ptzCurrentAttitude, ptzExpectAttitude } = props;
+
   const [step, setStep] = useState(5);
   const [pitch, setPitch] = useState(ptzCurrentAttitude.pitch);
   const [yaw, setYaw] = useState(ptzCurrentAttitude.yaw);
 
   const updateAngle = useCallback(
-    debounce((direction: string) => {
+    (direction: string) => {
+      console.log("updateAngle", direction);
+      console.log("before switch", ptz);
+
       let target = 0;
       switch (direction) {
         case "up":
@@ -108,6 +101,8 @@ export function NavComponent(props: {
           break;
       }
 
+      console.log("after switch", pitch, yaw);
+
       // 发送指令
       if (ptz.pitch && ptz.yaw) {
         onSendCommand(
@@ -126,7 +121,7 @@ export function NavComponent(props: {
           })
         );
       }
-    }, 200),
+    },
     [step, yaw, pitch]
   );
 
@@ -159,6 +154,8 @@ export function NavComponent(props: {
           </RadioGroup>
         </Box>
 
+        {JSON.stringify(props.ptz)}
+
         <Box
           border="1px"
           borderRadius={"50%"}
@@ -166,78 +163,82 @@ export function NavComponent(props: {
           height="160px"
           position={"relative"}
         >
-          <ChevronUpIcon
-            boxSize={"10"}
-            position={"absolute"}
-            top={"10px"}
-            left={"60px"}
-            onClick={() => updateAngle("up")}
-            _hover={
-              ptz.pitch
-                ? {
-                    background: "white",
-                    color: "teal.500",
-                    scale: 1.2,
-                  }
-                : {
-                    cursor: "not-allowed",
-                  }
-            }
-          />
-          <ChevronDownIcon
-            boxSize={"10"}
-            position={"absolute"}
-            bottom={"10px"}
-            left={"60px"}
-            onClick={() => updateAngle("down")}
-            _hover={
-              ptz.pitch
-                ? {
-                    background: "white",
-                    color: "teal.500",
-                    scale: 1.2,
-                  }
-                : {
-                    cursor: "not-allowed",
-                  }
-            }
-          />
-          <ChevronLeftIcon
-            boxSize={"10"}
-            position={"absolute"}
-            top={"60px"}
-            left={"10px"}
-            onClick={() => updateAngle("left")}
-            _hover={
-              ptz.yaw
-                ? {
-                    background: "white",
-                    color: "teal.500",
-                    scale: 1.2,
-                  }
-                : {
-                    cursor: "not-allowed",
-                  }
-            }
-          />
-          <ChevronRightIcon
-            boxSize={"10"}
-            position={"absolute"}
-            top={"60px"}
-            right={"10px"}
-            onClick={() => updateAngle("right")}
-            _hover={
-              ptz.yaw
-                ? {
-                    background: "white",
-                    color: "teal.500",
-                    scale: 1.2,
-                  }
-                : {
-                    cursor: "not-allowed",
-                  }
-            }
-          />
+          {ptz && (
+            <>
+              <ChevronUpIcon
+                boxSize={"10"}
+                position={"absolute"}
+                top={"10px"}
+                left={"60px"}
+                onClick={() => updateAngle("up")}
+                _hover={
+                  ptz.pitch
+                    ? {
+                        background: "white",
+                        color: "teal.500",
+                        scale: 1.2,
+                      }
+                    : {
+                        cursor: "not-allowed",
+                      }
+                }
+              />
+              <ChevronDownIcon
+                boxSize={"10"}
+                position={"absolute"}
+                bottom={"10px"}
+                left={"60px"}
+                onClick={() => updateAngle("down")}
+                _hover={
+                  ptz.pitch
+                    ? {
+                        background: "white",
+                        color: "teal.500",
+                        scale: 1.2,
+                      }
+                    : {
+                        cursor: "not-allowed",
+                      }
+                }
+              />
+              <ChevronLeftIcon
+                boxSize={"10"}
+                position={"absolute"}
+                top={"60px"}
+                left={"10px"}
+                onClick={() => updateAngle("left")}
+                _hover={
+                  ptz.yaw
+                    ? {
+                        background: "white",
+                        color: "teal.500",
+                        scale: 1.2,
+                      }
+                    : {
+                        cursor: "not-allowed",
+                      }
+                }
+              />
+              <ChevronRightIcon
+                boxSize={"10"}
+                position={"absolute"}
+                top={"60px"}
+                right={"10px"}
+                onClick={() => updateAngle("right")}
+                _hover={
+                  ptz.yaw
+                    ? {
+                        background: "white",
+                        color: "teal.500",
+                        scale: 1.2,
+                      }
+                    : {
+                        cursor: "not-allowed",
+                      }
+                }
+              />
+            </>
+          )}
         </Box>
 
         <InputGroup width="150px">
