@@ -7,7 +7,7 @@ import { TagLabel } from "@chakra-ui/react";
 
 log.initialize();
 
-log.info("主进程启动");
+// log.info("主进程启动");
 
 // The built directory structure
 //
@@ -49,10 +49,10 @@ const indexHtml = join(process.env.DIST, "index.html");
 
 async function createWindow() {
   win = new BrowserWindow({
-    title: "云台指向系统",
+    title: "载荷控制系统",
     icon: join(process.env.VITE_PUBLIC, "favicon.ico"),
-    width: 1000,
-    height: 680,
+    width: 1820,
+    height: 1080,
     webPreferences: {
       preload,
       // Warning: Enable nodeIntegration and disable contextIsolation is not secure in production

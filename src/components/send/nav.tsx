@@ -66,7 +66,6 @@ export function NavComponent(props: {
 
   const updateAngle = useCallback(
     debounce((direction: string) => {
-      console.log(direction);
       let target = 0;
       switch (direction) {
         case "up":

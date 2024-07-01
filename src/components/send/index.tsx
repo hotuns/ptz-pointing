@@ -6,6 +6,7 @@ import {
   Button,
   Flex,
   useDisclosure,
+  Select,
   Divider,
 } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
@@ -29,6 +30,7 @@ import {
   stop_control,
   set_temperature,
   read_status,
+  set_sampling_method,
 } from "@/DeviceCommunicator/commands/pass_through";
 
 export function AppSend({
@@ -38,9 +40,11 @@ export function AppSend({
   ptzExpectAttitude,
   ptzCurrentAttitude,
   payloadTemperature,
+  exportFile
 }: {
   isDisabled: boolean;
   onSendCommand: (command: Buffer) => void;
+  exportFile: Function;
   ptz: {
     name: string;
     pitch: boolean;
@@ -98,6 +102,10 @@ export function AppSend({
     onSendCommand(start_control());
   };
 
+  const methodChange = (e: any) => {
+    onSendCommand(set_sampling_method(Number(e.target.value)));
+  }
+
   const stopControl = () => {
     onSendCommand(stop_control());
   };
@@ -110,7 +118,7 @@ export function AppSend({
           pointerEvents: isDisabled ? "none" : "auto",
         }}
       >
-        <Box className="space-y-1 flex flex-col">
+        <div className="space-y-1 flex w-1/3 flex-col">
           <NavComponent
             ptzExpectAttitude={ptzExpectAttitude}
             ptzCurrentAttitude={ptzCurrentAttitude}
@@ -134,55 +142,62 @@ export function AppSend({
               重启
             </Button>
           </Card>
-        </Box>
+        </div>
 
         <Card p="4" className="flex-1 space-y-2 p-2">
-          <p className="text-center">
-            是否开始控制： {payloadTemperature.switch ? "是" : "否"}
-          </p>
-          <p className="text-center">当前采样： {payloadTemperature.method}</p>
+          <div className="flex">
+          <div className="text-center flex items-center justify-center  w-1/2 mr-1">
+            <p>采样方式：</p>
+            <div>
+              <Select placeholder='采样方式' className="w-10" value={payloadTemperature.method} onChange={methodChange}>
+                <option value={1}>1</option>
+                <option value={2}>2</option>
+                <option value={3}>3</option>
+            </Select>
+            </div>
+          </div>
+            <p className="text-center w-1/2 ml-1">
+              载荷温度{payloadTemperature.method || ""}： {payloadTemperature.method === 1 ? payloadTemperature.temperature1 : payloadTemperature.method === 2 ? payloadTemperature.temperature2 : payloadTemperature.temperature3} ℃
+            </p>
+          </div>
 
-          <p className="text-center">
-            载荷温度1： {payloadTemperature.temperature1} ℃
-          </p>
-          <p className="text-center">
-            载荷温度2： {payloadTemperature.temperature2} ℃
-          </p>
-          <p className="text-center">
-            载荷温度3： {payloadTemperature.temperature3} ℃
-          </p>
+          <div className=" p-2 flex">
+            <Button className="w-1/2 mr-1" onClick={startControl}>开始温控</Button>
+            <Button className="w-1/2 ml-1" onClick={stopControl}>停止温控</Button>
+          </div>
 
-          <Card className="space-y-2 p-2">
-            <Button onClick={startControl}>开始温控</Button>
-            <Button onClick={stopControl}>停止温控</Button>
-          </Card>
-
-          <Card w="100%" className="mt-6 space-y-1">
-            <FormControl display="flex" alignItems="center">
-              <NumberInput
-                size="sm"
-                id="temperature"
-                value={targetTemperature}
-                onChange={(valueAsString, valueAsNumber) => {
-                  setTargetTemperature(valueAsNumber);
-                }}
-              >
-                <NumberInputField />
-              </NumberInput>
-              <FormLabel htmlFor="temperature">℃</FormLabel>
-            </FormControl>
-            <Button
-              w="100%"
-              onClick={() => {
-                onSendCommand(set_temperature(targetTemperature));
-              }}
-            >
-              设置温度
-            </Button>
-          </Card>
+          <div  className="mt-6 w-full !flex">
+              <div className="w-1/2">
+                  <FormControl display="flex" className="w-full" alignItems="center">
+                  <NumberInput
+                    id="temperature"
+                    className="w-full"
+                    value={targetTemperature}
+                    onChange={(valueAsString, valueAsNumber) => {
+                      setTargetTemperature(valueAsNumber);
+                    }}
+                  >
+                    <NumberInputField />
+                  </NumberInput>
+                  <FormLabel htmlFor="temperature">℃</FormLabel>
+                </FormControl>
+                <Button
+                  w="100%"
+                  className="mt-2"
+                  onClick={() => {
+                    onSendCommand(set_temperature(targetTemperature));
+                  }}
+                >
+                  设置温度
+                </Button>
+              </div>
+              <div className="w-1/2 px-2">
+                  <Button onClick={() => exportFile("txt")} className="w-full">数据生成</Button>
+                  <Button onClick={() => exportFile("csv")} className="w-full mt-2">模板数据</Button>
+              </div>
+          </div>
         </Card>
 
-        {/* 遮罩层，挡住操作 */}
         {isDisabled && (
           <Box
             bg="blackAlpha.500"

@@ -55,8 +55,9 @@ export function PlantCom(props: {
     .join("");
 
   return (
-    <Card>
-      <Box padding={"10px"} position={"relative"}>
+    <div className="w-full h-full relative">
+      <Card className="w-full h-full flex flex-col">
+      <Box position={"relative"} className="flex-1">
         <Box position={"absolute"} left={"5"}>
           <Text fontSize="md">飞控</Text>
           <Box>
@@ -89,6 +90,7 @@ export function PlantCom(props: {
           </Box>
         </Box>
 
+        <div className="h-full">
         <Image
           id="plant"
           src={PlantImg}
@@ -106,8 +108,10 @@ export function PlantCom(props: {
             )}deg)`,
           }}
         />
+        </div>
       </Box>
 
+      <div className="absolute bottom-1 w-full flex flex-col">
       <Box className="flex space-x-4" justifyContent={"space-between"}>
         <Stat textAlign={"center"}>
           <StatNumber>{(deviceStatus.temperature / 100).toFixed(2)}</StatNumber>
@@ -134,6 +138,8 @@ export function PlantCom(props: {
         </Stat>
       </Box>
       <Box>{power_io_status_array_fill_result}</Box>
+      </div>
     </Card>
+    </div>
   );
 }

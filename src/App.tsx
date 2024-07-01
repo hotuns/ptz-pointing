@@ -7,8 +7,12 @@ import { Box, Card, Flex, Select, Image, Button } from "@chakra-ui/react";
 import { PlantCom } from "./components/plant";
 import log from "electron-log/renderer";
 import { read_status } from "./DeviceCommunicator/commands/pass_through";
+import EchartTemperature from "./components/echarts/EchartTemperature";
+import dayjs from 'dayjs';
+import { useExportCsv } from "./hooks/export-csv-hook";
+import { useExportTxtLog } from "./hooks/export-txt-hook";
 
-let isMock = true;
+let isMock = false;
 let communicator: DeviceCommunicator | null = null;
 
 const ptzlist = [
@@ -33,16 +37,51 @@ function App() {
     const index = e.target.value;
     set_currentPtz(ptzlist[parseInt(index)]);
   };
+  const {handleDownloadCsv} = useExportCsv();
+  const { handleDownloadTxt } = useExportTxtLog()
+
+  const [echart, setEchart] = useState<any[]>([]);
 
   const [serialport_list, set_serialport_list] = useState<any[]>([]);
   const [currentPort, set_currentPort] = useState<any>();
 
   const [isBtnDisabled, set_isBtnDisabled] = useState<boolean>(true);
 
+
+  const exportFile = (value: string) => {
+    switch(value){
+      case "csv" : 
+        const fields = [
+          {
+            label: '时间', // 中文表头
+            value: 'time'  // 对应的 JSON 属性
+          },
+          {
+            label: '温度',
+            value: 'temperature'
+          },
+          {
+            label: '采样方式',
+            value: 'method'
+          }
+        ];
+      const data = echart.map(item => ({
+        time: item[0],         // "时间" 对应 "time"
+        temperature: item[1],  // "温度" 对应 "temperature"
+        method: item[2]        // "采样方式" 对应 "method"
+      }));
+      handleDownloadCsv(fields, data)
+     return;
+     case "txt": 
+        const txts = echart.map(item => `${item[0]} ${item[1]} ${item[2]}`).join('\n');
+        handleDownloadTxt(txts)
+       return;
+    }
+  }
+
   function reloadPortList() {
     DeviceCommunicator.list()
       .then((list) => {
-        console.log("[App.tsx]", "list", list);
         set_serialport_list(list);
       })
       .catch((err) => {
@@ -56,6 +95,7 @@ function App() {
   }
 
   function handlePortStart() {
+    set_isBtnDisabled(false);
     communicator = new DeviceCommunicator(currentPort, onDataReceived, isMock);
     communicator!.open().then(() => {
       set_isBtnDisabled(false);
@@ -131,6 +171,7 @@ function App() {
     temperature3: 0,
     // 采样方式
     method: 0,
+    
   });
 
   function onDataReceived(list: { id: TLVType; string: string; value: any }[]) {
@@ -153,19 +194,23 @@ function App() {
           break;
         case TLVType.协议透传接收:
           let value = data.value;
+          const payload = value.data.method === 1 ? value.data.temperature1 : value.data.method === 2 ? value.data.temperature2 : value.data.temperature3;
           // 开始解析payload
-          console.log("透传payload", value);
-
-          setPayloadTemperature(value);
+          setPayloadTemperature(value.data);
+          log.info("温度:", `${value.data.method} ${payload} ℃`);
+          const formattedNow = dayjs().format('YYYY-MM-DD HH:mm:ss.SSS')
+          setEchart(prevNumbers => [...prevNumbers, [formattedNow, payload, value.data.method]])
           break;
         default:
-          log.info(data.string, JSON.stringify(data.value));
+          // log.info(data.string, JSON.stringify(data.value));
           break;
       }
     });
   }
 
   function onSendCommand(command: Buffer) {
+    console.log("发送 = ", command.toString('hex'));
+    
     communicator!
       .send(command)
       .then(() => {
@@ -178,7 +223,7 @@ function App() {
 
   return (
     <Card className="p-2 w-full h-full select-none" bg="gray.100">
-      <div className="w-full grid grid-cols-2">
+      <div className="w-full h-full grid grid-cols-2">
         <PlantCom
           controlCurrentAttitude={controlCurrentAttitude}
           ptzCurrentAttitude={ptzCurrentAttitude}
@@ -244,7 +289,11 @@ function App() {
             ptzCurrentAttitude={ptzCurrentAttitude}
             ptzExpectAttitude={ptzExpectAttitude}
             payloadTemperature={payloadTemperature}
+            exportFile={exportFile}
           />
+          <div className={`${isBtnDisabled ? "none" : "black"} w-full h-full`}>
+           <EchartTemperature echart={echart} method={payloadTemperature.method}/>
+          </div>
         </Card>
       </div>
     </Card>
