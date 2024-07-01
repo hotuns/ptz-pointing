@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import  { useState, FC, memo, useRef } from "react";
 import {
   ChevronDownIcon,
   ChevronLeftIcon,
@@ -36,7 +36,7 @@ const debounce = (func: Function, wait: number) => {
   };
 };
 
-export function NavComponent(props: {
+export const NavComponent: FC<{
   ptzExpectAttitude: IPtzExpectlAttitude;
   onSendCommand: (command: Buffer) => void;
   ptz: {
@@ -47,83 +47,87 @@ export function NavComponent(props: {
     yaw_limit: number[];
   };
   ptzCurrentAttitude: IPtzAttitude;
-}) {
-  const { ptz, onSendCommand, ptzCurrentAttitude, ptzExpectAttitude } = props;
-
+}> = memo(({ptz, onSendCommand, ptzCurrentAttitude, ptzExpectAttitude}) => {
   const [step, setStep] = useState(5);
-  const [pitch, setPitch] = useState(ptzCurrentAttitude.pitch);
-  const [yaw, setYaw] = useState(ptzCurrentAttitude.yaw);
+  // const [pitch, setPitch] = useState(ptzCurrentAttitude.pitch);
+  // const [yaw, setYaw] = useState(ptzCurrentAttitude.yaw);
 
-  const updateAngle = useCallback(
-    (direction: string) => {
-      console.log("updateAngle", direction);
-      console.log("before switch", ptz);
 
-      let target = 0;
-      switch (direction) {
-        case "up":
-          if (!ptz.pitch) break;
-          // 判断limit，超过limit 则等于limit
-          target = pitch + step;
-          target = Math.max(target, ptz.pitch_limit[0]);
-          target = Math.min(target, ptz.pitch_limit[1]);
-          console.log("up", "target", target);
-          setPitch(target);
-          break;
-        case "down":
-          if (!ptz.pitch) break;
-          target = pitch - step;
-          target = Math.max(target, ptz.pitch_limit[0]);
-          target = Math.min(target, ptz.pitch_limit[1]);
-          console.log("down", "target", target);
+  const yaw = useRef<number>(ptzCurrentAttitude.yaw);
+  const pitch = useRef<number>(ptzCurrentAttitude.pitch);
 
-          setPitch(target);
-          break;
-        case "left":
-          if (!ptz.yaw) break;
-          target = yaw - step;
-          target = Math.max(target, ptz.yaw_limit[0]);
-          target = Math.min(target, ptz.yaw_limit[1]);
-          console.log("left", "target", target);
 
-          setYaw(target);
-          break;
-        case "right":
-          if (!ptz.yaw) break;
-          target = yaw + step;
-          target = Math.max(target, ptz.yaw_limit[0]);
-          target = Math.min(target, ptz.yaw_limit[1]);
-          console.log("right", "target", target);
 
-          setYaw(target);
-          break;
-        default:
-          break;
-      }
+  const updateAngle = (direction: string) => {
+    console.log("updateAngle", direction);
+    console.log("before switch", ptz);
 
-      console.log("after switch", pitch, yaw);
+    let target = 0;
+    switch (direction) {
+      case "up":
+        if (!ptz.pitch) break;
+        // 判断limit，超过limit 则等于limit
+        target = pitch.current + step;
+        target = Math.max(target, ptz.pitch_limit[0]);
+        target = Math.min(target, ptz.pitch_limit[1]);
+        console.log("up", "target", target);
+        // setPitch(target);
+        pitch.current = target;
+        break;
+      case "down":
+        if (!ptz.pitch) break;
+        target = pitch.current - step;
+        target = Math.max(target, ptz.pitch_limit[0]);
+        target = Math.min(target, ptz.pitch_limit[1]);
+        console.log("down", "target", target);
 
-      // 发送指令
-      if (ptz.pitch && ptz.yaw) {
-        onSendCommand(
-          set_ptz_angles(false, {
-            pitch,
-            roll: ptzCurrentAttitude.roll,
-            yaw,
-          })
-        );
-      } else if (!ptz.pitch && ptz.yaw) {
-        onSendCommand(
-          set_ptz_angles(false, {
-            pitch: ptzCurrentAttitude.pitch,
-            roll: ptzCurrentAttitude.roll,
-            yaw,
-          })
-        );
-      }
-    },
-    [step, yaw, pitch]
-  );
+        // setPitch(target);
+        pitch.current = target;
+        break;
+      case "left":
+        if (!ptz.yaw) break;
+        target = yaw.current - step;
+        target = Math.max(target, ptz.yaw_limit[0]);
+        target = Math.min(target, ptz.yaw_limit[1]);
+        console.log("left", "target", target);
+
+        // setYaw(target);
+        yaw.current =target
+        break;
+      case "right":
+        if (!ptz.yaw) break;
+        target = yaw.current + step;
+        target = Math.max(target, ptz.yaw_limit[0]);
+        target = Math.min(target, ptz.yaw_limit[1]);
+        console.log("right", "target", target);
+
+        // setYaw(target);
+        yaw.current =target
+        break;
+      default:
+        break;
+    }
+
+
+    // 发送指令
+    if (ptz.pitch && ptz.yaw) {
+      onSendCommand(
+        set_ptz_angles(false, {
+          pitch: pitch.current,
+          roll: ptzCurrentAttitude.roll,
+          yaw: yaw.current,
+        })
+      );
+    } else if (!ptz.pitch && ptz.yaw) {
+      onSendCommand(
+        set_ptz_angles(false, {
+          pitch: ptzCurrentAttitude.pitch,
+          roll: ptzCurrentAttitude.roll,
+          yaw: yaw.current,
+        })
+      );
+    }
+  };
 
   // 运行模式
   const [ptzMode, setPtzMode] = useState<"1" | "2" | "3">("1");
@@ -154,7 +158,7 @@ export function NavComponent(props: {
           </RadioGroup>
         </Box>
 
-        {JSON.stringify(props.ptz)}
+        {JSON.stringify(ptz)}
 
         <Box
           border="1px"
@@ -260,8 +264,10 @@ export function NavComponent(props: {
           colorScheme="blue"
           width={"150px"}
           onClick={() => {
-            setPitch(0);
-            setYaw(0);
+            // setPitch(0);
+            pitch.current = 0
+            // setYaw(0);
+            yaw.current = 0
             // 可以在这里添加一键回中的逻辑
             onSendCommand(set_ptz_angles(true));
           }}
@@ -271,4 +277,4 @@ export function NavComponent(props: {
       </Flex>
     </Card>
   );
-}
+})
