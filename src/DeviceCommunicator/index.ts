@@ -69,7 +69,7 @@ export class DeviceCommunicator {
     this.parser = this.port.pipe(new CustomParser());
 
     this.parser.on("data", (data: Buffer) => {
-      
+      log.info("Receive:", data.toString("hex"));
 
       let TLV_list = this.parseTLV(data);
       let parsed_TLV_list = TLV_list.map((packet) => {
@@ -104,7 +104,6 @@ export class DeviceCommunicator {
       console.log("数据 = ", data);
       server.setBroadcast(true); 
       server.send(Buffer.from(data), FORWARD_PORT, FORWARD_HOST, (err) => {
-        console.log("---------", err);
         
         if (err) {
           console.error(err);

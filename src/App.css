@@ -1,6 +1,7 @@
 #root {
   width: 100vw;
   height: 100vh;
+  min-width: 1050px;
   overflow: hidden;
   margin: 0 auto;
 }
@@ -14,7 +15,6 @@
 
 #plant {
   transform-origin: center center;
-  margin: 25% 0;
 }
 #ptz {
   position: absolute;
