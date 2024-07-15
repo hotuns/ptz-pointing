@@ -55,7 +55,7 @@ export function PlantCom(props: {
     .join("");
 
   return (
-    <div className="w-full h-full flex flex-col">
+    <div className="w-full h-full flex flex-col justify-around">
       <Card className="w-full">
         <Box position={"relative"} className="">
           <Image

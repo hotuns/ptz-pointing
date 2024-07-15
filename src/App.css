@@ -1,7 +1,6 @@
 #root {
   width: 100vw;
   height: 100vh;
-  min-width: 1050px;
   overflow: hidden;
   margin: 0 auto;
 }

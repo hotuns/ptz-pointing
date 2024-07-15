@@ -23,12 +23,6 @@ const ptzlist = [
     yaw: true,
     yaw_limit: [-30, 30],
   },
-  {
-    name: "钜钺重载云台",
-    pitch: false,
-    yaw: true,
-    yaw_limit: [-180, 180],
-  },
 ];
 
 function App() {
@@ -246,23 +240,22 @@ function App() {
         <Card className="w-full">
           {/* 连接 */}
           <Card>
+            <Select
+              placeholder="请选择云台"
+              onChange={handlePtzChange}
+              isDisabled={!isBtnDisabled}
+            >
+              {ptzlist.map((ptz, index) => {
+                return (
+                  <option key={ptz.name} value={index}>
+                    {ptz.name}
+                  </option>
+                );
+              })}
+            </Select>
             <Flex>
               <Select
-                placeholder="云台"
-                onChange={handlePtzChange}
-                isDisabled={!isBtnDisabled}
-              >
-                {ptzlist.map((ptz, index) => {
-                  return (
-                    <option key={ptz.name} value={index}>
-                      {ptz.name}
-                    </option>
-                  );
-                })}
-              </Select>
-
-              <Select
-                placeholder="端口"
+                placeholder="请选择端口"
                 onClick={reloadPortList}
                 onChange={handlePortChange}
                 isDisabled={!isBtnDisabled}
@@ -294,7 +287,6 @@ function App() {
             </Flex>
           </Card>
 
-          {JSON.stringify(currentPtz)}
           <AppSend
             isDisabled={isBtnDisabled}
             ptz={currentPtz}
@@ -304,13 +296,6 @@ function App() {
             payloadTemperature={payloadTemperature}
             exportFile={exportFile}
           />
-
-          <div className={`${isBtnDisabled ? "none" : "black"} w-full h-full`}>
-            <EchartTemperature
-              echart={echart}
-              method={payloadTemperature.method}
-            />
-          </div>
         </Card>
       </div>
     </Card>

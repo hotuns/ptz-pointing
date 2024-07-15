@@ -51,8 +51,8 @@ async function createWindow() {
   win = new BrowserWindow({
     title: "载荷控制系统",
     icon: join(process.env.VITE_PUBLIC, "favicon.ico"),
-    width: 1820,
-    height: 1080,
+    width: 750,
+    height: 600,
     webPreferences: {
       preload,
       // Warning: Enable nodeIntegration and disable contextIsolation is not secure in production
