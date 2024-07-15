@@ -2,7 +2,7 @@
   "name": "ptz-pointing",
   "version": "2.3.3",
   "main": "dist-electron/main/index.js",
-  "description": "Electron Vite React boilerplate.",
+  "description": "ZY60云台指向软件.",
   "author": "hotuns",
   "license": "MIT",
   "private": true,

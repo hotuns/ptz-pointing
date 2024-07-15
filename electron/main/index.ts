@@ -49,7 +49,7 @@ const indexHtml = join(process.env.DIST, "index.html");
 
 async function createWindow() {
   win = new BrowserWindow({
-    title: "载荷控制系统",
+    title: "ZY60云台指向软件",
     icon: join(process.env.VITE_PUBLIC, "favicon.ico"),
     width: 750,
     height: 600,
