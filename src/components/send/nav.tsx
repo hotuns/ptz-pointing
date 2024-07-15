@@ -1,4 +1,4 @@
-import  { useState, FC, memo, useRef } from "react";
+import { useState, FC, memo, useRef } from "react";
 import {
   ChevronDownIcon,
   ChevronLeftIcon,
@@ -47,16 +47,13 @@ export const NavComponent: FC<{
     yaw_limit: number[];
   };
   ptzCurrentAttitude: IPtzAttitude;
-}> = memo(({ptz, onSendCommand, ptzCurrentAttitude, ptzExpectAttitude}) => {
+}> = memo(({ ptz, onSendCommand, ptzCurrentAttitude, ptzExpectAttitude }) => {
   const [step, setStep] = useState(5);
   // const [pitch, setPitch] = useState(ptzCurrentAttitude.pitch);
   // const [yaw, setYaw] = useState(ptzCurrentAttitude.yaw);
 
-
   const yaw = useRef<number>(ptzCurrentAttitude.yaw);
   const pitch = useRef<number>(ptzCurrentAttitude.pitch);
-
-
 
   const updateAngle = (direction: string) => {
     console.log("updateAngle", direction);
@@ -92,7 +89,7 @@ export const NavComponent: FC<{
         console.log("left", "target", target);
 
         // setYaw(target);
-        yaw.current =target
+        yaw.current = target;
         break;
       case "right":
         if (!ptz.yaw) break;
@@ -102,12 +99,11 @@ export const NavComponent: FC<{
         console.log("right", "target", target);
 
         // setYaw(target);
-        yaw.current =target
+        yaw.current = target;
         break;
       default:
         break;
     }
-
 
     // 发送指令
     if (ptz.pitch && ptz.yaw) {
@@ -157,8 +153,6 @@ export const NavComponent: FC<{
             </Stack>
           </RadioGroup>
         </Box>
-
-        {JSON.stringify(ptz)}
 
         <Box
           border="1px"
@@ -265,9 +259,9 @@ export const NavComponent: FC<{
           width={"150px"}
           onClick={() => {
             // setPitch(0);
-            pitch.current = 0
+            pitch.current = 0;
             // setYaw(0);
-            yaw.current = 0
+            yaw.current = 0;
             // 可以在这里添加一键回中的逻辑
             onSendCommand(set_ptz_angles(true));
           }}
@@ -277,4 +271,4 @@ export const NavComponent: FC<{
       </Flex>
     </Card>
   );
-})
+});
