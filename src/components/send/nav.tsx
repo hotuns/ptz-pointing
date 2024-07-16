@@ -44,7 +44,9 @@ export const NavComponent: FC<{
     pitch: boolean;
     yaw: boolean;
     pitch_limit: number[];
+    pitch_origin: number;
     yaw_limit: number[];
+    yaw_origin: number;
   };
   ptzCurrentAttitude: IPtzAttitude;
 }> = memo(({ ptz, onSendCommand, ptzCurrentAttitude, ptzExpectAttitude }) => {
@@ -64,7 +66,7 @@ export const NavComponent: FC<{
       case "up":
         if (!ptz.pitch) break;
         // 判断limit，超过limit 则等于limit
-        target = pitch.current + step;
+        target = ptz.pitch_origin + pitch.current + step;
         target = Math.max(target, ptz.pitch_limit[0]);
         target = Math.min(target, ptz.pitch_limit[1]);
         console.log("up", "target", target);
@@ -73,7 +75,7 @@ export const NavComponent: FC<{
         break;
       case "down":
         if (!ptz.pitch) break;
-        target = pitch.current - step;
+        target = ptz.pitch_origin + pitch.current - step;
         target = Math.max(target, ptz.pitch_limit[0]);
         target = Math.min(target, ptz.pitch_limit[1]);
         console.log("down", "target", target);
@@ -83,7 +85,7 @@ export const NavComponent: FC<{
         break;
       case "left":
         if (!ptz.yaw) break;
-        target = yaw.current - step;
+        target = ptz.yaw_origin + yaw.current - step;
         target = Math.max(target, ptz.yaw_limit[0]);
         target = Math.min(target, ptz.yaw_limit[1]);
         console.log("left", "target", target);
@@ -93,7 +95,7 @@ export const NavComponent: FC<{
         break;
       case "right":
         if (!ptz.yaw) break;
-        target = yaw.current + step;
+        target = ptz.yaw_origin + yaw.current + step;
         target = Math.max(target, ptz.yaw_limit[0]);
         target = Math.min(target, ptz.yaw_limit[1]);
         console.log("right", "target", target);
