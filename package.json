@@ -1,6 +1,6 @@
 {
   "name": "ptz-pointing",
-  "version": "2.3.4",
+  "version": "2.3.5",
   "main": "dist-electron/main/index.js",
   "description": "ZY60云台指向软件.",
   "author": "hotuns",

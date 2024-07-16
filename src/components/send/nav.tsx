@@ -65,23 +65,24 @@ export const NavComponent: FC<{
     switch (direction) {
       case "up":
         if (!ptz.pitch) break;
+
         // 判断limit，超过limit 则等于limit
-        target = ptz.pitch_origin + pitch.current + step;
+        target = ptz.pitch_origin + pitch.current - step;
         target = Math.max(target, ptz.pitch_limit[0]);
         target = Math.min(target, ptz.pitch_limit[1]);
         console.log("up", "target", target);
         // setPitch(target);
-        pitch.current = target;
+        pitch.current = target - ptz.pitch_origin;
         break;
       case "down":
         if (!ptz.pitch) break;
-        target = ptz.pitch_origin + pitch.current - step;
+        target = ptz.pitch_origin + pitch.current + step;
         target = Math.max(target, ptz.pitch_limit[0]);
         target = Math.min(target, ptz.pitch_limit[1]);
         console.log("down", "target", target);
 
         // setPitch(target);
-        pitch.current = target;
+        pitch.current = target - ptz.pitch_origin;
         break;
       case "left":
         if (!ptz.yaw) break;
@@ -91,7 +92,7 @@ export const NavComponent: FC<{
         console.log("left", "target", target);
 
         // setYaw(target);
-        yaw.current = target;
+        yaw.current = target - ptz.yaw_origin;
         break;
       case "right":
         if (!ptz.yaw) break;
@@ -101,7 +102,7 @@ export const NavComponent: FC<{
         console.log("right", "target", target);
 
         // setYaw(target);
-        yaw.current = target;
+        yaw.current = target - ptz.yaw_origin;
         break;
       default:
         break;

@@ -50,7 +50,9 @@ export function AppSend({
     pitch: boolean;
     yaw: boolean;
     pitch_limit: number[];
+    pitch_origin: number;
     yaw_limit: number[];
+    yaw_origin: number;
   };
   ptzExpectAttitude: IPtzExpectlAttitude;
   ptzCurrentAttitude: IPtzAttitude;
