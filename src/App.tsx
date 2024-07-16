@@ -19,7 +19,7 @@ const ptzlist = [
   {
     name: "翔拓二轴云台",
     pitch: true,
-    pitch_limit: [-30, 30],
+    pitch_limit: [-120, -70],
     yaw: true,
     yaw_limit: [-30, 30],
   },
