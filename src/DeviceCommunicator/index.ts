@@ -10,6 +10,20 @@ const FORWARD_PORT = 54321;
 const FORWARD_HOST = '255.255.255.255';
 server.bind(54320);
 
+
+// 原始数据日志前缀：
+// 接收数据：[RAW_RECEIVE]
+// 发送数据：[RAW_SEND]
+// 模拟数据：[MOCK_SEND]
+// 解析后数据日志前缀：
+// 解析数据：[PARSED_DATA][数据类型]
+// 解析过程：[TLV_PARSE]
+// 错误和状态日志前缀：
+// 串口错误：[PORT_ERROR]
+// 串口状态：[PORT_INFO]
+// 发送错误：[SEND_ERROR]
+// UDP错误：[UDP_ERROR]
+
 export enum TLVType {
   "飞控当前姿态角" = 0x01,
   "设备经纬高" = 0x02,
@@ -69,7 +83,8 @@ export class DeviceCommunicator {
     this.parser = this.port.pipe(new CustomParser());
 
     this.parser.on("data", (data: Buffer) => {
-      log.info("Receive:", data.toString("hex"));
+      // 使用特定前缀标记原始接收数据
+      log.info("[RAW_RECEIVE]", data.toString("hex"));
 
       let TLV_list = this.parseTLV(data);
       let parsed_TLV_list = TLV_list.map((packet) => {
@@ -77,6 +92,12 @@ export class DeviceCommunicator {
       });
 
       let result = parsed_TLV_list.filter((x) => x !== undefined);
+
+      // 使用特定前缀标记解析后的数据
+      result.forEach((x) => {
+        log.info(`[PARSED_DATA][${x.string}]`, JSON.stringify(x.value));
+      });
+
       onDataReceived(result);
     });
   }
@@ -99,14 +120,14 @@ export class DeviceCommunicator {
 
     setInterval(() => {
       const index = Math.floor(Math.random() * mocklist.length);
-      console.log("Send:", mocklist[index], `count: ${this.sendCount++}`);
+      // 使用前缀标记模拟发送数据
+      log.info("[MOCK_SEND]", `${mocklist[index]}, count: ${this.sendCount++}`);
       const data = mocklist[index].split(" ").map((x) => parseInt(x, 16));
-      // console.log("发送mock数据 = ", data);
       server.setBroadcast(true); 
       server.send(Buffer.from(data), FORWARD_PORT, FORWARD_HOST, (err) => {
         
         if (err) {
-          console.error(err);
+          log.error("[UDP_ERROR]", err);
         }
       });
       // @ts-ignore
@@ -118,8 +139,10 @@ export class DeviceCommunicator {
     return new Promise((resolve, reject) => {
       this.port.open((err) => {
         if (err) {
+          log.error("[PORT_ERROR]", "打开串口失败", err);
           reject(err);
         } else {
+          log.info("[PORT_INFO]", "串口已成功打开");
           this.isOpen = true;
           resolve();
         }
@@ -131,8 +154,10 @@ export class DeviceCommunicator {
     return new Promise((resolve, reject) => {
       this.port.close((err) => {
         if (err) {
+          log.error("[PORT_ERROR]", "关闭串口失败", err);
           reject(err);
         } else {
+          log.info("[PORT_INFO]", "串口已成功关闭");
           this.isOpen = false;
           resolve();
         }
@@ -153,11 +178,13 @@ export class DeviceCommunicator {
 
     frame.writeUInt16LE(crc, frame.length - 2); // CRC 校验
 
-    log.info("Send", frame.toString("hex"));
+    // 使用特定前缀标记原始发送数据
+    log.info("[RAW_SEND]", frame.toString("hex"));
 
     return new Promise((resolve, reject) => {
       this.port.write(frame, (err) => {
         if (err) {
+          log.error("[SEND_ERROR]", err);
           reject(err);
         } else {
           resolve();
@@ -190,7 +217,8 @@ export class DeviceCommunicator {
     const data = packet.data;
     server.setBroadcast(true); 
    
-   console.log('接收 = ', data);
+    // 使用前缀标记协议解析数据
+    log.debug('[TLV_PARSE]', `接收数据包: 类型=${packet.name}, 长度=${packet.length}`);
    
     let _json = null;
     let _jsonString = "";

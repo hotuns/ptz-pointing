@@ -52,7 +52,9 @@ async function createWindow() {
     title: "ZY60云台指向软件",
     icon: join(process.env.VITE_PUBLIC, "favicon.ico"),
     width: 750,
-    height: 600,
+    minWidth: 750,
+    height: 720,
+    minHeight: 720,
     webPreferences: {
       preload,
       // Warning: Enable nodeIntegration and disable contextIsolation is not secure in production

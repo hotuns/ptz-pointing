@@ -7,6 +7,12 @@ import {
   StatLabel,
   StatNumber,
   StatHelpText,
+  Flex,
+  Grid,
+  GridItem,
+  Heading,
+  Divider,
+  Badge,
 } from "@chakra-ui/react";
 import PlantImg from "@/assets/p.png";
 import PTZIcon from "@/assets/ptz.svg";
@@ -26,11 +32,11 @@ export function PlantCom(props: {
     deviceStatus,
   } = props;
 
+  // 计算云台相对于飞控的旋转角度
   const computedPtzAttitude = (plant: number, ptz: number) => {
     // ptz图标回正，所以需要加上45度
     const ptzA = ptz + 45;
     // ptz云台的是相对于飞控的角度，左偏为负数，右边为正数
-
     return plant + ptzA;
   };
 
@@ -54,100 +60,225 @@ export function PlantCom(props: {
     })
     .join("");
 
+  // 格式化数值的通用函数
+  const formatValue = (value: number) => value.toFixed(2);
+
   return (
-    <div className="w-full h-full flex flex-col justify-around">
-      <Card className="w-full">
-        <Box position={"relative"} className="">
-          <Image
-            id="plant"
-            src={PlantImg}
-            style={{
-              transform: `rotate(${controlCurrentAttitude.yaw}deg)`,
-            }}
-          />
-          <Image
-            id="ptz"
-            src={PTZIcon}
-            style={{
-              transform: `rotate(${computedPtzAttitude(
+    <Flex direction="column" w="full" h="full" gap={4}>
+      {/* 飞控和云台状态可视化 */}
+      <Card p={4} borderRadius="lg">
+        <Flex direction="column" align="center">
+          <Heading size="sm" mb={3}>飞控与云台方向指示器</Heading>
+          <Box position="relative" h="180px" w="180px">
+            {/* 指示器背景圆 */}
+            <Box
+              position="absolute"
+              top="50%"
+              left="50%"
+              transform="translate(-50%, -50%)"
+              w="160px"
+              h="160px"
+              borderRadius="full"
+              border="1px dashed"
+              borderColor="gray.300"
+              zIndex={1}
+            />
+            
+            {/* 方位标记 */}
+            {['N', 'E', 'S', 'W'].map((direction, index) => (
+              <Text
+                key={direction}
+                position="absolute"
+                top={index === 0 ? "5px" : index === 2 ? "calc(100% - 20px)" : "calc(50% - 10px)"}
+                left={index === 1 ? "calc(100% - 20px)" : index === 3 ? "5px" : "calc(50% - 5px)"}
+                fontSize="sm"
+                fontWeight="bold"
+                color="gray.600"
+                zIndex={1}
+              >
+                {direction}
+              </Text>
+            ))}
+            
+            {/* 飞控图标 - 底层 */}
+            <Image
+              id="plant"
+              src={PlantImg}
+              position="absolute"
+             
+              top="50%"
+              left="50%"
+              transform={`translate(-50%, -50%) rotate(${controlCurrentAttitude.yaw}deg)`}
+              transition="transform 0.5s ease"
+              maxH="120px"
+              zIndex={2}
+            />
+            
+            {/* 云台图标 - 顶层 */}
+            <Image
+              id="ptz"
+              src={PTZIcon}
+              position="absolute"
+              top="50%"
+              left="50%"
+              transform={`translate(-50%, -50%) rotate(${computedPtzAttitude(
                 controlCurrentAttitude.yaw,
                 ptzCurrentAttitude.yaw
-              )}deg)`,
-            }}
-          />
-        </Box>
+              )}deg)`}
+              transition="transform 0.5s ease"
+              maxH="60px"
+              zIndex={3}
+            />
+          </Box>
+          
+          <Flex mt={4} gap={6}>
+            <Badge colorScheme="blue" p={2}>
+              <Flex direction="column" align="center">
+                <Text fontWeight="bold">飞控偏航角</Text>
+                <Text>{formatValue(controlCurrentAttitude.yaw)}°</Text>
+              </Flex>
+            </Badge>
+            
+            <Badge colorScheme="green" p={2}>
+              <Flex direction="column" align="center">
+                <Text fontWeight="bold">云台偏航角</Text>
+                <Text>{formatValue(ptzCurrentAttitude.yaw)}°</Text>
+              </Flex>
+            </Badge>
+            
+            <Badge colorScheme="purple" p={2}>
+              <Flex direction="column" align="center">
+                <Text fontWeight="bold">相对角度</Text>
+                <Text>{formatValue(ptzCurrentAttitude.yaw)}°</Text>
+              </Flex>
+            </Badge>
+          </Flex>
+        </Flex>
       </Card>
 
-      <Card className="w-full">
-        <Box className="flex w-full">
-          <Box className="w-full text-center">
-            <Text fontSize="md">飞控</Text>
-            <Box>
-              <Text fontSize="xs">
-                pitch: {controlCurrentAttitude.pitch.toFixed(2)}
-              </Text>
+      {/* 姿态和位置信息 */}
+      <Card p={4}  borderRadius="lg">
+        <Grid templateColumns="repeat(3, 1fr)" gap={4}>
+          {/* 飞控姿态 */}
+          <GridItem>
+            <Flex direction="column" align="center">
+              <Heading size="sm" mb={2}>飞控姿态</Heading>
+              <Divider mb={2} />
+              <Flex direction="column" gap={1}>
+                <Badge colorScheme="blue" p={1} borderRadius="md">
+                  <Flex justify="space-between" w="full" px={2}>
+                    <Text>Pitch:</Text>
+                    <Text>{formatValue(controlCurrentAttitude.pitch)}</Text>
+                  </Flex>
+                </Badge>
+                <Badge colorScheme="green" p={1} borderRadius="md">
+                  <Flex justify="space-between" w="full" px={2}>
+                    <Text>Roll:</Text>
+                    <Text>{formatValue(controlCurrentAttitude.roll)}</Text>
+                  </Flex>
+                </Badge>
+                <Badge colorScheme="purple" p={1} borderRadius="md">
+                  <Flex justify="space-between" w="full" px={2}>
+                    <Text>Yaw:</Text>
+                    <Text>{formatValue(controlCurrentAttitude.yaw)}</Text>
+                  </Flex>
+                </Badge>
+              </Flex>
+            </Flex>
+          </GridItem>
 
-              <Text fontSize="xs">
-                roll: {controlCurrentAttitude.roll.toFixed(2)}
-              </Text>
+          {/* 云台姿态 */}
+          <GridItem>
+            <Flex direction="column" align="center">
+              <Heading size="sm" mb={2}>云台姿态</Heading>
+              <Divider mb={2} />
+              <Flex direction="column" gap={1}>
+                <Badge colorScheme="blue" p={1} borderRadius="md">
+                  <Flex justify="space-between" w="full" px={2}>
+                    <Text>Pitch:</Text>
+                    <Text>{formatValue(ptzCurrentAttitude.pitch)}</Text>
+                  </Flex>
+                </Badge>
+                <Badge colorScheme="green" p={1} borderRadius="md">
+                  <Flex justify="space-between" w="full" px={2}>
+                    <Text>Roll:</Text>
+                    <Text>{formatValue(ptzCurrentAttitude.roll)}</Text>
+                  </Flex>
+                </Badge>
+                <Badge colorScheme="purple" p={1} borderRadius="md">
+                  <Flex justify="space-between" w="full" px={2}>
+                    <Text>Yaw:</Text>
+                    <Text>{formatValue(ptzCurrentAttitude.yaw)}</Text>
+                  </Flex>
+                </Badge>
+              </Flex>
+            </Flex>
+          </GridItem>
 
-              <Text fontSize="xs">
-                yaw: {controlCurrentAttitude.yaw.toFixed(2)}
-              </Text>
-            </Box>
-          </Box>
+          {/* 位置信息 */}
+          <GridItem>
+            <Flex direction="column" align="center">
+              <Heading size="sm" mb={2}>位置信息</Heading>
+              <Divider mb={2} />
+              <Flex direction="column" gap={1}>
+                <Badge colorScheme="orange" p={1} borderRadius="md">
+                  <Flex justify="space-between" w="full" px={2}>
+                    <Text>经度:</Text>
+                    <Text>{formatValue(devicePosition.lng)}</Text>
+                  </Flex>
+                </Badge>
+                <Badge colorScheme="yellow" p={1} borderRadius="md">
+                  <Flex justify="space-between" w="full" px={2}>
+                    <Text>纬度:</Text>
+                    <Text>{formatValue(devicePosition.lat)}</Text>
+                  </Flex>
+                </Badge>
+                <Badge colorScheme="cyan" p={1} borderRadius="md">
+                  <Flex justify="space-between" w="full" px={2}>
+                    <Text>高度:</Text>
+                    <Text>{formatValue(devicePosition.alt)}</Text>
+                  </Flex>
+                </Badge>
+              </Flex>
+            </Flex>
+          </GridItem>
+        </Grid>
 
-          <Box className="w-full text-center">
-            <Text fontSize="md">云台</Text>
-            <Box>
-              <Text fontSize="xs">
-                pitch: {ptzCurrentAttitude.pitch.toFixed(2)}
-              </Text>
+        {/* 电压和温度信息 */}
+        <Divider my={4} />
+        <Box mt={2}>
+          <Heading size="sm" mb={2} textAlign="center">系统状态</Heading>
+          <Flex justify="space-between" w="full" mt={2}>
+            <Stat textAlign="center" bg="gray.50" p={2} borderRadius="md">
+              <StatNumber color="red.500">
+                {(deviceStatus.temperature / 100).toFixed(2)}°C
+              </StatNumber>
+              <StatHelpText mb={0}>温度</StatHelpText>
+            </Stat>
 
-              <Text fontSize="xs">
-                roll: {ptzCurrentAttitude.roll.toFixed(2)}
-              </Text>
+            <Stat textAlign="center" bg="gray.50" p={2} borderRadius="md">
+              <StatNumber color="blue.500">
+                {(deviceStatus.main_voltage / 100).toFixed(2)}V
+              </StatNumber>
+              <StatHelpText mb={0}>主电压</StatHelpText>
+            </Stat>
 
-              <Text fontSize="xs">
-                yaw: {ptzCurrentAttitude.yaw.toFixed(2)}
-              </Text>
-            </Box>
-          </Box>
+            <Stat textAlign="center" bg="gray.50" p={2} borderRadius="md">
+              <StatNumber color="green.500">
+                {(deviceStatus.sys_voltage / 100).toFixed(2)}V
+              </StatNumber>
+              <StatHelpText mb={0}>系统电压</StatHelpText>
+            </Stat>
+
+            <Stat textAlign="center" bg="gray.50" p={2} borderRadius="md">
+              <StatNumber color="purple.500">
+                {(deviceStatus.chip_voltage / 100).toFixed(2)}V
+              </StatNumber>
+              <StatHelpText mb={0}>芯片电压</StatHelpText>
+            </Stat>
+          </Flex>
         </Box>
-
-        <div className="w-full flex flex-col">
-          <Box textAlign={"center"}>{power_io_status_array_fill_result}</Box>
-          <Box className="flex space-x-4" justifyContent={"space-between"}>
-            <Stat textAlign={"center"}>
-              <StatNumber>
-                {(deviceStatus.temperature / 100).toFixed(2)}
-              </StatNumber>
-              <StatHelpText>温度</StatHelpText>
-            </Stat>
-
-            <Stat textAlign={"center"}>
-              <StatNumber>
-                {(deviceStatus.main_voltage / 100).toFixed(2)}
-              </StatNumber>
-              <StatHelpText>主电压</StatHelpText>
-            </Stat>
-
-            <Stat textAlign={"center"}>
-              <StatNumber>
-                {(deviceStatus.sys_voltage / 100).toFixed(2)}
-              </StatNumber>
-              <StatHelpText>系统电压</StatHelpText>
-            </Stat>
-
-            <Stat textAlign={"center"}>
-              <StatNumber>
-                {(deviceStatus.chip_voltage / 100).toFixed(2)}
-              </StatNumber>
-              <StatHelpText>芯片电压</StatHelpText>
-            </Stat>
-          </Box>
-        </div>
       </Card>
-    </div>
+    </Flex>
   );
 }

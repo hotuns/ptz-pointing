@@ -199,7 +199,6 @@ function App() {
               : value.data.temperature3;
           // 开始解析payload
           setPayloadTemperature(value.data);
-          log.info("温度:", `${value.data.method} ${payload} ℃`);
           const formattedNow = dayjs().format("YYYY-MM-DD HH:mm:ss.SSS");
           setEchart((prevNumbers) => [
             ...prevNumbers,
@@ -207,7 +206,7 @@ function App() {
           ]);
           break;
         default:
-          // log.info(data.string, JSON.stringify(data.value));
+          
           break;
       }
     });
@@ -229,7 +228,7 @@ function App() {
   return (
     <Card className="p-2 w-full h-full select-none " bg="gray.100">
       <div className="w-full h-full flex space-x-2">
-        <Card className="w-[550px]">
+        <Card className="w-1/2">
           <PlantCom
             controlCurrentAttitude={controlCurrentAttitude}
             ptzCurrentAttitude={ptzCurrentAttitude}
@@ -239,7 +238,7 @@ function App() {
           />
         </Card>
 
-        <Card className="w-full">
+        <Card className="w-1/2">
           {/* 连接 */}
           <Card>
             <Select
