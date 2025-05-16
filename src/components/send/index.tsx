@@ -8,6 +8,8 @@ import {
   useDisclosure,
   Select,
   Divider,
+  Text,
+  Tooltip,
 } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
 import {
@@ -65,16 +67,26 @@ export function AppSend({
   };
 }) {
   const [ptzAnglesOpt, setPtzAnglesOpt] = useState({
-    pitch: 0,
-    roll: 0,
-    yaw: 0,
+    pitch: ptzCurrentAttitude.pitch,
+    roll: ptzCurrentAttitude.roll,
+    yaw: ptzCurrentAttitude.yaw,
   });
+
+  useEffect(() => {
+    setPtzAnglesOpt({
+      pitch: ptzCurrentAttitude.pitch,
+      roll: ptzCurrentAttitude.roll,
+      yaw: ptzCurrentAttitude.yaw,
+    });
+  }, [ptzCurrentAttitude]);
+
   const handleAnglesOptChange = (key: string, value: number | string) => {
     setPtzAnglesOpt({
       ...ptzAnglesOpt,
-      [key]: value,
+      [key]: parseFloat(value as string),
     });
   };
+  
   const {
     isOpen: isAnglesOpen,
     onOpen: openAngles,
@@ -89,7 +101,7 @@ export function AppSend({
   const handleLocationOptChange = (key: string, value: number | string) => {
     setPtzLocationOpt({
       ...ptzLocationOpt,
-      [key]: value,
+      [key]: parseFloat(value as string),
     });
   };
   const {
@@ -110,6 +122,20 @@ export function AppSend({
 
   const stopControl = () => {
     onSendCommand(stop_control());
+  };
+
+  const sendPtzAngles = () => {
+    let pitchValue = ptzAnglesOpt.pitch;
+    let yawValue = ptzAnglesOpt.yaw;
+    
+    onSendCommand(
+      set_ptz_angles(false, {
+        pitch: pitchValue,
+        roll: ptzAnglesOpt.roll,
+        yaw: yawValue,
+      })
+    );
+    closeAngles();
   };
 
   return (
@@ -154,78 +180,77 @@ export function AppSend({
           ></Box>
         )}
 
-        {/* 以下为弹出层 */}
         <Modal isOpen={isAnglesOpen} size="4xl" onClose={closeAngles}>
           <ModalOverlay />
           <ModalContent>
             <ModalHeader>设置云台角度</ModalHeader>
-            <Flex className="space-x-1 p-2">
-              <FormControl display="flex" alignItems="center">
-                <FormLabel htmlFor="pitch">俯仰</FormLabel>
+            <ModalBody>
+              <Text mb={3} fontSize="sm" color="gray.600">
+                当前云台角度: 俯仰={ptzCurrentAttitude.pitch.toFixed(2)}°, 
+                滚转={ptzCurrentAttitude.roll.toFixed(2)}°, 
+                航向={ptzCurrentAttitude.yaw.toFixed(2)}°
+              </Text>
+              <Flex className="space-x-4 p-2">
+                <FormControl display="flex" alignItems="center">
+                  <Tooltip label="负值向上，正值向下，与导航控制保持一致">
+                    <FormLabel htmlFor="pitch" width="4rem">俯仰角</FormLabel>
+                  </Tooltip>
+                  <NumberInput
+                    size="md"
+                    id="pitch"
+                    value={ptzAnglesOpt.pitch}
+                    onChange={(value) => {
+                      handleAnglesOptChange("pitch", value);
+                    }}
+                    precision={2}
+                  >
+                    <NumberInputField />
+                  </NumberInput>
+                </FormControl>
 
-                <NumberInput
-                  size="sm"
-                  id="pitch"
-                  value={ptzAnglesOpt.pitch}
-                  onChange={(value) => {
-                    handleAnglesOptChange("pitch", value);
-                  }}
-                >
-                  <NumberInputField />
-                </NumberInput>
-              </FormControl>
+                <FormControl display="flex" alignItems="center">
+                  <FormLabel htmlFor="roll" width="4rem">滚转角</FormLabel>
+                  <NumberInput
+                    size="md"
+                    id="roll"
+                    value={ptzAnglesOpt.roll}
+                    onChange={(value) => {
+                      handleAnglesOptChange("roll", value);
+                    }}
+                    precision={2}
+                  >
+                    <NumberInputField />
+                  </NumberInput>
+                </FormControl>
 
-              <FormControl display="flex" alignItems="center">
-                <FormLabel htmlFor="roll" mb="0">
-                  滚转
-                </FormLabel>
-                <NumberInput
-                  size="sm"
-                  id="roll"
-                  value={ptzAnglesOpt.roll}
-                  onChange={(value) => {
-                    handleAnglesOptChange("roll", value);
-                  }}
-                >
-                  <NumberInputField />
-                </NumberInput>
-              </FormControl>
-
-              <FormControl display="flex" alignItems="center">
-                <FormLabel htmlFor="yaw" mb="0">
-                  航向
-                </FormLabel>
-                <NumberInput
-                  size="sm"
-                  id="yaw"
-                  value={ptzAnglesOpt.yaw}
-                  onChange={(value) => {
-                    handleAnglesOptChange("yaw", value);
-                  }}
-                >
-                  <NumberInputField />
-                </NumberInput>
-              </FormControl>
-            </Flex>
-            <ModalBody></ModalBody>
+                <FormControl display="flex" alignItems="center">
+                  <Tooltip label="负值向左，正值向右，与导航控制保持一致">
+                    <FormLabel htmlFor="yaw" width="4rem">航向角</FormLabel>
+                  </Tooltip>
+                  <NumberInput
+                    size="md"
+                    id="yaw"
+                    value={ptzAnglesOpt.yaw}
+                    onChange={(value) => {
+                      handleAnglesOptChange("yaw", value);
+                    }}
+                    precision={2}
+                  >
+                    <NumberInputField />
+                  </NumberInput>
+                </FormControl>
+              </Flex>
+            </ModalBody>
 
             <ModalFooter>
               <Button mr={3} onClick={closeAngles}>
-                关闭
+                取消
               </Button>
               <Button
                 colorScheme="blue"
-                onClick={() => {
-                  onSendCommand(
-                    set_ptz_angles(false, {
-                      pitch: ptzAnglesOpt.pitch,
-                      roll: ptzAnglesOpt.roll,
-                      yaw: ptzAnglesOpt.yaw,
-                    })
-                  );
-                }}
+                onClick={sendPtzAngles}
               >
-                设置云台角度
+                确认设置
               </Button>
             </ModalFooter>
           </ModalContent>
